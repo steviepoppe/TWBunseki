@@ -21,6 +21,7 @@ import re
 import requests
 import sys
 import time
+from urllib.parse import urlparse
 
 import aiohttp
 import pandas as pd
@@ -181,6 +182,7 @@ async def expand_media_urls(media_set, exclude_twitter_urls, follow_redirects):
 			continue
 		media_set[url]['error_expanding'] = error
 		media_set[url]['expanded'] = expanded
+		media_set[url]['domain'] = urlparse(expanded).netloc
 
 
 async def expand_url(session, url, follow_redirects):
@@ -191,7 +193,7 @@ async def expand_url(session, url, follow_redirects):
 			if follow_redirects:
 				expanded = str(getattr(res, 'url', ''))
 			else:
-				expanded = res.get('location', '')
+				expanded = res.headers.get('location', '')
 	except Exception:
 		error = True
 	error = expanded == ''
@@ -298,13 +300,13 @@ def save_media_metrics(media_set, file_name):
 	with open('./results/metrics_%s/%s_media.csv' % (file_name, file_name),
 		mode='w', encoding='utf-8', newline='') as file_media:
 		writer_media = csv.writer(file_media)
-		writer_media.writerow(['url', 'expanded_url', 'error_expanding', 'total_tweets', 'total_retweet'])
+		writer_media.writerow(['url', 'expanded_url', 'domain', 'error_expanding', 'total_tweets', 'total_retweet'])
 
 		for url, value in media_set.items():
 			try:
-				writer_media.writerow([url, value['expanded'], str(value['error_expanding']), str(value['metrics'][0]), str(value['metrics'][1])])
+				writer_media.writerow([url, value['expanded'], value['domain'], str(value['error_expanding']), str(value['metrics'][0]), str(value['metrics'][1])])
 			except Exception:
-				writer_media.writerow([url, '', str(True), str(value['metrics'][0]), str(value['metrics'][1])])
+				writer_media.writerow([url, '', '', str(True), str(value['metrics'][0]), str(value['metrics'][1])])
 	print('Finished. Saved to ./results/metrics_%s/%s_media.csv' % (file_name, file_name))
 
 def save_user_metrics(user_set, file_name):
