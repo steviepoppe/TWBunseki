@@ -152,6 +152,7 @@ def media_metrics(tweet, media_set, is_retweet, exclude_twitter_urls):
 		return
 	
 	url = result[1]
+	print(f'Expanding URL {url}...')
 	if url in media_set:
 		media_set[url]['metrics'][is_retweet] += 1
 	else:
@@ -313,7 +314,7 @@ def save_user_metrics(user_set, file_name):
 
 
 if __name__ == '__main__':
-	p = argparse.ArgumentParser(description='Analyze metrics for a Twitter corpus w/ format compatible with python_twitter_search_v*.py')
+	p = argparse.ArgumentParser(description='Analyze metrics for a Twitter corpus w/ format compatible with twitter_search.py')
 	p.add_argument(
 		'-f',
 		'--filename',

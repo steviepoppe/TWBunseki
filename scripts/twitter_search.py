@@ -9,8 +9,16 @@ The process can be terminated at any time using ctrl-c; the last ID will be prin
 Use the last ID as earliest_id to continue mining tweets tweeted 
 before the max time span collected until process termination
 
+HAS to be run with academic creds
+
+Run:
+0. Fill BEARER_TOKEN in a file called settings.py (see example at settings.py.example)
+1. Install pandas and tweepy (`$ pip install pandas tweepy`)
+2. Get all arguments from `$ python twitter_search.py --help`
 """
+import argparse
 import sys
+import time
 import os
 from pathlib import Path
 from csv import QUOTE_NONNUMERIC
@@ -25,80 +33,30 @@ from settings import BEARER_TOKEN
 # SETTINGS
 # --------
 
-# SET EITHER OF THESE IF WANTING TO RESUME PROGRESS else set to None
-earliest_id = None  # Optional: Until which ID?
-most_recent_id = None  # Optional: From which ID onward?
-
 # Different query when having an academic account
 academic = True  # non-academic, recent-search has a limit of 450 calls per 15 minute, x100 = 4500 tweets. Academic = 3000
 
-# Other settings
-keep_rt = True
-max_results_per_page = 500 #default = 100, academic = 500 (suspended content gets filtered after retrieval, so per page you may get fewer results)
-
-save_file_name = 'retrieved_tweets'
-
-search_query = 'spaghetti'
-
-#format: YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339)
-fromdate = None
-todate = None
-
 # ==========================================
 
-# SCRIPT AUTOMATED VARIABLES; DO NOT TOUCH
-# To Check whether we have stored keys
-keys_exists = False
-
-## EXTRA DO NOT TOUCH
-session_earliest_id = None
-session_most_recent_id = None
-
-# ==========================================
-
-def search_tweets(sys_args):
-
-	global earliest_id
-	global most_recent_id
-	global search_query
-	global keys_exists
-	global save_file_name
-
-	# overwrite script settings with sys arguments
-
-	#Search queries can be single terms or more intricate queries. 
-	#When passing queries from the command prompt, they should be formatted within double quotation marks, with exact terms of several words in single quotes
-	# e.g. Multiple keywords (AND): "apple banana" | "'apple cake' 'banana bread' 'orange juice'"
-	# OR expressions: "banana OR carrot" | "'banana bread' OR 'ginger ale'"
-	# for more, see http://t.co/operators and https://developer.twitter.com/en/docs/twitter-api/premium/search-api/api-reference/premium-search
-	if len(sys_args) > 1:
-		search_query = str(sys_args[1]).replace('\'', '\"')
-		print(search_query)
-	if len(sys_args) > 2:
-		save_file_name = sys_args[2]
-#	else:
-#		save_file_name = search_query
-	if len(sys_args) > 3:
-		earliest_id = sys_args[3]
-	if len(sys_args) > 4:
-		most_recent_id = sys_args[4]
-
-
+def search_tweets(args):
 	client = tweepy.Client(BEARER_TOKEN, wait_on_rate_limit=True)
 
 	Path('./results/').mkdir(parents=True, exist_ok=True)
 
-	key_file_name = f'./results/{save_file_name}_ID_keys.csv'
+	filename = args['filename']
+	key_file_name = f'./results/{filename}_ID_keys.csv'
 	keys_exists = os.path.isfile(key_file_name)
 	
 	if keys_exists:
 		with open(key_file_name, mode='r') as file:
 			temp_earliest_id, temp_most_recent_id = file.read().split(',')
 
-	tweet_total_count = process_tweets(client, search_query, save_file_name)
+	tweet_total_count, session_earliest_id, session_most_recent_id = process_tweets(client, args, keys_exists)
 	
-	print(f"Finished process. Downloaded {tweet_total_count} total tweets. This session's oldest tweet ID was {session_earliest_id} and most recent tweet ID was {session_most_recent_id}")
+	print(f"Finished process. Downloaded {tweet_total_count} total tweets. This session's oldest tweet ID was {session_earliest_id} and most newest tweet ID was {session_most_recent_id}")
 
+	earliest_id = args['until_id']
+	most_recent_id = args['from_id']
 	with open(key_file_name, mode='w+') as file:
 		if earliest_id is not None:
 			most_recent_id = temp_most_recent_id
@@ -112,24 +70,22 @@ def search_tweets(sys_args):
 
 		file.write(f'{earliest_id},{most_recent_id}')
 
-def process_tweets(client, search_query, save_file_name):
+def process_tweets(client, args, keys_exists):
 
 	first_page = True
-
-	global session_earliest_id
-	global session_most_recent_id
+	session_most_recent_id, session_earliest_id = None, None
 
 	search_endpoint = client.search_recent_tweets if not academic else client.search_all_tweets
 
 	tweet_count = 0
 	try:
 		for page in tweepy.Paginator(
-				search_endpoint, search_query,
+				search_endpoint, args['query'],
 				user_fields='verified,description,username,created_at,public_metrics',	
 				expansions='author_id,referenced_tweets.id,referenced_tweets.id.author_id',
 				tweet_fields='created_at,lang,public_metrics,conversation_id,entities,attachments,referenced_tweets,in_reply_to_user_id',
-                max_results=max_results_per_page, since_id=most_recent_id, until_id=earliest_id,
-                start_time=fromdate, end_time=todate,
+                max_results=args['max_per_page'], since_id=args['from_id'], until_id=args['until_id'],
+                start_time=args['from_date'], end_time=args['to_date'],
             ):
 
 			tweets = page[0]
@@ -209,7 +165,7 @@ def process_tweets(client, search_query, save_file_name):
 					tweet_row["possibly_sensitive"] = tweet["possibly_sensitive"]
 
 				if "referenced_tweets" in tweet:
-					if keep_rt:
+					if args['keep_rt']:
 						retweets = [x for x in tweet["referenced_tweets"] if x["type"] == "retweeted"]
 						if len(retweets) > 0:
 							retweet_id = retweets[0]["id"]  # there can only be 1 retweeted ref tweet
@@ -235,17 +191,18 @@ def process_tweets(client, search_query, save_file_name):
 
 				if tweet_count == 0:
 					session_most_recent_id = tweet["id"]
-				if earliest_id != tweet["id"]:
+				if args['until_id'] != tweet["id"]:
 					session_earliest_id = tweet["id"]
 				
 				tweet_count += 1
 
-			tweet_csv = pd.DataFrame(tweet_list)	
+			tweet_csv = pd.DataFrame(tweet_list)
+			filename = args['filename']
 			if first_page and not keys_exists:
-				tweet_csv.to_csv(f'./results/{save_file_name}.csv', index=False, mode="w+", encoding="utf-8", quoting=QUOTE_NONNUMERIC)
+				tweet_csv.to_csv(f'./results/{filename}.csv', index=False, mode="w+", encoding="utf-8", quoting=QUOTE_NONNUMERIC)
 			else:
 				# should edit header stuff here for adding to the file later
-				tweet_csv.to_csv(f'./results/{save_file_name}.csv', header=False, index=False, mode="a", encoding="utf-8", quoting=QUOTE_NONNUMERIC)
+				tweet_csv.to_csv(f'./results/{filename}.csv', header=False, index=False, mode="a", encoding="utf-8", quoting=QUOTE_NONNUMERIC)
 
 			print("Downloaded %d tweets" % tweet_count)	
 			first_page = False
@@ -255,7 +212,69 @@ def process_tweets(client, search_query, save_file_name):
 	except tweepy.errors.TweepyException as exception:
 		print("Error: %s. Downloaded %d total tweets. This session's oldest tweet ID was %s and most newest tweet ID was %s" % (tweet_count, session_earliest_id, session_most_recent_id))
 
-	return tweet_count
+	return tweet_count, session_earliest_id, session_most_recent_id
 
 if __name__ == '__main__':
-	search_tweets(sys.argv)
+	p = argparse.ArgumentParser(description='Fetch data from Twitter using search params and save to csv')
+	p.add_argument(
+		'-q',
+		'--query',
+		type=str,
+		required=True,
+		help='Search queries can be single terms or more intricate queries. '\
+			 'When passing queries from the command prompt, they should be formatted within double quotation marks, '\
+			 'with exact terms of several words in single quotes. '\
+			 'See http://t.co/operators and https://developer.twitter.com/en/docs/twitter-api/premium/search-api/api-reference/premium-search',
+	)
+	p.add_argument(
+		'-f',
+		'--filename',
+		type=str,
+		help='Required if you want to resume in a specific file. Default: search query + timestamp',
+	)
+	p.add_argument(
+		'-ui',
+		'--until-id',
+		type=str,
+		help='Until which ID do you want to fetch/resume fetching tweets? If not specified, no limits',
+	)
+	p.add_argument(
+		'-fi',
+		'--from-id',
+		type=str,
+		help='From which ID do you want to fetch/resume fetching tweets? If not specified, no limits',
+	)
+	p.add_argument(
+		'--no-keep-rt',
+		action='store_true',
+		help='Use this to NOT store retweet-related data',
+	)
+	p.add_argument(
+		'-m',
+		'--max-per-page',
+		type=int,
+		default=500,  # academic
+		help='Default is 500 which is max for academic accounts (suspended content gets filtered after retrieval, so per page you may get fewer results)'
+	)
+	p.add_argument(
+		'-fd',
+		'--from-date',
+		type=str,
+		help='Format: YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339)'
+	)
+	p.add_argument(
+		'-td',
+		'--to-date',
+		type=str,
+		help='Format: YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339)'
+	)
+	# default filename here
+	args = vars(p.parse_args())
+
+	if args['filename'] is None:
+		args['filename'] = args['query'] + '_' + str(int(time.time()))
+
+	args['keep_rt'] = not args['no_keep_rt']
+
+	args['query'] = args['query'].replace('\'', '\"')
+	search_tweets(args)
