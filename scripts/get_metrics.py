@@ -37,6 +37,7 @@ async def parse_tweets(args):
 	analyze_urls = args['analyze_urls']
 	exclude_twitter_urls = args['exclude_twitter_urls']
 	chunksize = args['chunk_size']
+	follow_redirects = args['follow_redirects']
 	hashtags = {}
 	hashtag_dates = {}
 	date_set = {}
@@ -66,7 +67,7 @@ async def parse_tweets(args):
 			if analyze_urls:
 				media_metrics(tweet, media_set, is_retweet)
 		if analyze_urls:
-			await expand_media_urls(media_set, exclude_twitter_urls)
+			await expand_media_urls(media_set, exclude_twitter_urls, follow_redirects)
 		print('Processed %s lines.' % line_count)
 		
 	print('Processed total of %s lines.' % line_count)
@@ -153,7 +154,7 @@ def time_metrics(tweet, time_set, is_retweet):
 
 
 def media_metrics(tweet, media_set, is_retweet):
-	pattern = re.compile(r'.*(https://t.co/[^\s]{1,10}).*')
+	pattern = re.compile(r'.*(https://t.co/[\w\d]+).*')
 	result = pattern.match(tweet['text'])
 	if result is None:
 		return
@@ -167,12 +168,12 @@ def media_metrics(tweet, media_set, is_retweet):
 		media_set[url]['metrics'][is_retweet] = 1
 
 
-async def expand_media_urls(media_set, exclude_twitter_urls):
+async def expand_media_urls(media_set, exclude_twitter_urls, follow_redirects):
 	async with aiohttp.ClientSession() as session:
 		tasks = []
 		for url in media_set:
 			if 'expanded' not in media_set[url]:
-				tasks.append(asyncio.ensure_future(expand_url(session, url)))
+				tasks.append(asyncio.ensure_future(expand_url(session, url, follow_redirects)))
 		expanded_urls = await asyncio.gather(*tasks)
 	for url, expanded, error in expanded_urls:
 		if expanded.startswith('https://twitter.com/') and exclude_twitter_urls:
@@ -182,12 +183,15 @@ async def expand_media_urls(media_set, exclude_twitter_urls):
 		media_set[url]['expanded'] = expanded
 
 
-async def expand_url(session, url):
+async def expand_url(session, url, follow_redirects):
 	expanded = ''
 	error = False
 	try:
-		async with session.get(url, allow_redirects=False) as res:
-			expanded = res.headers.get('location', '')
+		async with session.head(url, allow_redirects=follow_redirects) as res:
+			if follow_redirects:
+				expanded = str(getattr(res, 'url', ''))
+			else:
+				expanded = res.get('location', '')
 	except Exception:
 		error = True
 	error = expanded == ''
@@ -389,6 +393,11 @@ if __name__ == '__main__':
 		'--no-analyze-users',
 		action='store_true',
 		help='Use this to NOT process users'
+	)
+	p.add_argument(
+		'--follow-redirects',
+		action='store_true',
+		help='Pass this to follow redirects in URL analysis (e.g. expand bit.ly etc) - SIGNIFICANTLY SLOWER'
 	)
 
 	args = vars(p.parse_args())
