@@ -155,7 +155,7 @@ def time_metrics(tweet, time_set, is_retweet):
 
 
 def media_metrics(tweet, media_set, is_retweet):
-	pattern = re.compile(r'.*(https://t.co/[\w\d]+).*')
+	pattern = re.compile(r'.*(https://t.co/[a-zA-Z0-9]+).*')
 	result = pattern.match(tweet['text'])
 	if result is None:
 		return
