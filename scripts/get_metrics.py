@@ -39,6 +39,8 @@ async def parse_tweets(args):
 	exclude_twitter_urls = args['exclude_twitter_urls']
 	chunksize = args['chunk_size']
 	max_redirect_depth = args['max_redirect_depth']
+	from_date = args['from_date']
+	to_date = args['to_date']
 	hashtags = {}
 	hashtag_dates = {}
 	date_set = {}
@@ -46,14 +48,24 @@ async def parse_tweets(args):
 	user_set = {}
 	media_set = {}
 	line_count = 0
+
+	save_file_name = file_name
+	if from_date:
+		save_file_name += f'_from:{from_date}'
+	if to_date:
+		save_file_name += f'_to:{to_date}'
 	
-	Path("./results/metrics_%s/" % file_name).mkdir(parents=True, exist_ok=True)
+	Path("./results/metrics_%s/" % save_file_name).mkdir(parents=True, exist_ok=True)
 
 	for chunk in pd.read_csv('./results/%s.csv' % file_name, encoding="utf-8", chunksize=chunksize, iterator=True):
+		chunk.created_at = pd.to_datetime(chunk.created_at, utc=True)
 		if timezone is not None:
-			chunk.created_at = pd.to_datetime(chunk.created_at, utc=True)
 			chunk.created_at = chunk.created_at.dt.tz_convert(tz=timezone)
-			chunk.created_at = chunk.created_at.apply(str)
+		if from_date is not None:
+			chunk = chunk[chunk.created_at >= from_date]
+		if to_date is not None:
+			chunk = chunk[chunk.created_at <= to_date]
+		chunk.created_at = chunk.created_at.apply(str)
 		for index, tweet in chunk.iterrows():
 			line_count += 1
 			is_retweet = 1 if tweet["is_retweet"] == True else 0
@@ -73,15 +85,15 @@ async def parse_tweets(args):
 		
 	print('Processed total of %s lines.' % line_count)
 	if analyze_hashtags:
-		save_hashtag_metrics(hashtags, file_name)
-		save_hashtag_date_metrics(hashtag_dates, file_name)
+		save_hashtag_metrics(hashtags, save_file_name)
+		save_hashtag_date_metrics(hashtag_dates, save_file_name)
 	if analyze_datetime:
-		save_date_metrics(date_set, file_name)
-		save_time_metrics(time_set, file_name)
+		save_date_metrics(date_set, save_file_name)
+		save_time_metrics(time_set, save_file_name)
 	if analyze_users:
-		save_user_metrics(user_set, file_name)
+		save_user_metrics(user_set, save_file_name)
 	if analyze_urls:
-		save_media_metrics(media_set, file_name)
+		save_media_metrics(media_set, save_file_name)
 			
 def hashtag_metrics(tweet, hashtags, is_retweet):
 	if not pd.isna(tweet["hashtags"]):
@@ -408,6 +420,16 @@ if __name__ == '__main__':
 		type=int,
 		default=1,
 		help='Max depth to follow redirects when analyzing URLs. Default is the minimum: 1 (get link after t.co). WARNING: exponentially slower with each added layer of depth'
+	)
+	p.add_argument(
+		'--from-date',
+		type=str,
+		help='Format: YYYY-MM-DD. Use only if you want to limit processing from a certain date (not datetime)'
+	)
+	p.add_argument(
+		'--to-date',
+		type=str,
+		help='Format: YYYY-MM-DD. Use only if you want to limit processing to a certain date (not datetime)'
 	)
 
 	args = vars(p.parse_args())
