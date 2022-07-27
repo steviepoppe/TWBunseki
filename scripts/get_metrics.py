@@ -38,7 +38,7 @@ async def parse_tweets(args):
 	analyze_urls = args['analyze_urls']
 	exclude_twitter_urls = args['exclude_twitter_urls']
 	chunksize = args['chunk_size']
-	follow_redirects = args['follow_redirects']
+	max_redirect_depth = args['max_redirect_depth']
 	hashtags = {}
 	hashtag_dates = {}
 	date_set = {}
@@ -68,7 +68,7 @@ async def parse_tweets(args):
 			if analyze_urls:
 				media_metrics(tweet, media_set, is_retweet)
 		if analyze_urls:
-			await expand_media_urls(media_set, exclude_twitter_urls, follow_redirects)
+			await expand_media_urls(media_set, exclude_twitter_urls, max_redirect_depth)
 		print('Processed %s lines.' % line_count)
 		
 	print('Processed total of %s lines.' % line_count)
@@ -169,35 +169,42 @@ def media_metrics(tweet, media_set, is_retweet):
 		media_set[url]['metrics'][is_retweet] = 1
 
 
-async def expand_media_urls(media_set, exclude_twitter_urls, follow_redirects):
+async def expand_media_urls(media_set, exclude_twitter_urls, max_redirect_depth):
 	async with aiohttp.ClientSession() as session:
 		tasks = []
 		for url in media_set:
 			if 'expanded' not in media_set[url]:
-				tasks.append(asyncio.ensure_future(expand_url(session, url, follow_redirects)))
+				tasks.append(asyncio.ensure_future(expand_url(session, url, max_redirect_depth)))
 		expanded_urls = await asyncio.gather(*tasks)
-	for url, expanded, error in expanded_urls:
+	for url, expanded, error, domain in expanded_urls:
 		if expanded.startswith('https://twitter.com/') and exclude_twitter_urls:
 			media_set.pop(url, None)
 			continue
 		media_set[url]['error_expanding'] = error
 		media_set[url]['expanded'] = expanded
-		media_set[url]['domain'] = urlparse(expanded).netloc
+		media_set[url]['domain'] = domain
 
 
-async def expand_url(session, url, follow_redirects):
+async def expand_url(session, url, max_redirect_depth):
 	expanded = ''
-	error = False
+	domain = ''
+	redirect = 0
+	next_url = url
 	try:
-		async with session.head(url, allow_redirects=follow_redirects) as res:
-			if follow_redirects:
-				expanded = str(getattr(res, 'url', ''))
-			else:
-				expanded = res.headers.get('location', '')
+		while redirect < max_redirect_depth:
+			async with session.head(next_url, allow_redirects=False) as res:
+				next_url = res.headers.get('location', '')
+			if next_url == '':
+				break
+			if next_url.startswith('/'):
+				next_url =  'https://' + domain + next_url
+			expanded = next_url
+			domain = urlparse(expanded).netloc or domain  # if no domain, keep last known domain
+			redirect += 1
 	except Exception:
-		error = True
+		pass
 	error = expanded == ''
-	return url, expanded, error
+	return url, expanded, error, domain
 
 def user_metrics(tweet, user_set, is_retweet, keep_rt):
 	if ("retweeted_status" in tweet) == False or keep_rt == True:
@@ -397,9 +404,10 @@ if __name__ == '__main__':
 		help='Use this to NOT process users'
 	)
 	p.add_argument(
-		'--follow-redirects',
-		action='store_true',
-		help='Pass this to follow redirects in URL analysis (e.g. expand bit.ly etc) - SIGNIFICANTLY SLOWER'
+		'--max-redirect-depth',
+		type=int,
+		default=1,
+		help='Max depth to follow redirects when analyzing URLs. Default is the minimum: 1 (get link after t.co). WARNING: exponentially slower with each added layer of depth'
 	)
 
 	args = vars(p.parse_args())
