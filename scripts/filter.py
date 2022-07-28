@@ -12,7 +12,7 @@ def filter_by_date(df, args):
     df[date_col] = pd.to_datetime(df[date_col], utc=require_tz_aware)
 
     if args['timezone']:
-        df[date_col] = df[date_col].dt.tz_convert(tz=timezone)
+        df[date_col] = df[date_col].dt.tz_convert(tz=args['timezone'])
 
     if args['from_date']:
         df = df[df[date_col] >= args['from_date']]
@@ -47,6 +47,7 @@ def filter_data(args):
     print('Done.')
 
 if __name__ == '__main__':
+    pd.options.mode.chained_assignment = None
     p = argparse.ArgumentParser(description='Filter csv data with given parameters')
 
     p.add_argument(
