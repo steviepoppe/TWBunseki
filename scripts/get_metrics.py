@@ -380,7 +380,7 @@ if __name__ == '__main__':
 		help='Size of processing chunk. Default: 100K rows'
 	)
 	p.add_argument(
-		'-t',
+		'-tz',
 		'--timezone',
 		type=str,
 		help='Timezone to convert time data to before analysis (does not impact original file) e.g. Asia/Tokyo (Optional)',
