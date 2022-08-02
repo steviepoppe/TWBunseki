@@ -20,11 +20,12 @@ import argparse
 import sys
 import time
 import os
+import traceback
 from pathlib import Path
 from csv import QUOTE_NONNUMERIC
 from datetime import datetime, timedelta
-import tweepy
 
+import tweepy
 import pandas as pd
 
 from settings import BEARER_TOKEN
@@ -209,8 +210,9 @@ def process_tweets(client, args, keys_exists):
 
 	except KeyboardInterrupt:
 		print("Process terminated. Downloaded %d total tweets. This session's oldest tweet ID was %s and most newest tweet ID was %s" % (tweet_count, session_earliest_id, session_most_recent_id))
-	except tweepy.errors.TweepyException as exception:
-		print("Error: %s. Downloaded %d total tweets. This session's oldest tweet ID was %s and most newest tweet ID was %s" % (tweet_count, session_earliest_id, session_most_recent_id))
+	except:
+		print(traceback.exc_info())
+		print("Downloaded %d total tweets. This session's oldest tweet ID was %s and most newest tweet ID was %s" % (tweet_count, session_earliest_id, session_most_recent_id))
 
 	return tweet_count, session_earliest_id, session_most_recent_id
 
