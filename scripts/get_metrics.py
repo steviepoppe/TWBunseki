@@ -32,7 +32,8 @@ async def parse_tweets(args):
 	file_path = args['filename']
 	timezone = args['timezone']  # example: 'Asia/Tokyo', 'UTC'
 	keep_rt = not args['no_keep_rt']
-	analyze_datetime = not args['no_analyze_datetime']
+	analyze_date = not args['no_analyze_date']
+	analyze_time = not args['no_analyze_time']
 	analyze_users = not args['no_analyze_users']
 	analyze_hashtags = not args['no_analyze_hashtags']
 	analyze_hashtag_dates = analyze_hashtags
@@ -64,15 +65,16 @@ async def parse_tweets(args):
 	Path("./results/metrics_%s/" % save_file_name).mkdir(parents=True, exist_ok=True)
 
 	for chunk in pd.read_csv(file_path, encoding="utf-8", chunksize=chunksize, iterator=True, sep=sep):
-		# time filtering and timezone conversion
-		chunk.created_at = pd.to_datetime(chunk.created_at, utc=True)
-		if timezone is not None:
-			chunk.created_at = chunk.created_at.dt.tz_convert(tz=timezone)
-		if from_date is not None:
-			chunk = chunk[chunk.created_at >= from_date]
-		if to_date is not None:
-			chunk = chunk[chunk.created_at <= to_date]
-		chunk.created_at = chunk.created_at.apply(str)
+		if 'created_at' in chunk:
+			# time filtering and timezone conversion
+			chunk.created_at = pd.to_datetime(chunk.created_at, utc=True)
+			if timezone is not None:
+				chunk.created_at = chunk.created_at.dt.tz_convert(tz=timezone)
+			if from_date is not None:
+				chunk = chunk[chunk.created_at >= from_date]
+			if to_date is not None:
+				chunk = chunk[chunk.created_at <= to_date]
+			chunk.created_at = chunk.created_at.apply(str)
 
 		# warnings
 		if 'hashtags' not in chunk and analyze_hashtags:
@@ -80,11 +82,16 @@ async def parse_tweets(args):
 			analyze_hashtag_dates = False
 			warnings.add('"hashtags" column is required to analyze hashtags. Skipping.')
 		if 'created_at' not in chunk:
+			if timezone is not None:
+				warnings.add('"created_at" column is required for timezone conversion. Skipping.')
+			if from_date is not None or to_date is not None:
+				warnings.add('"created_at" column is required for filtering by --to-date or --from-date. Skipping.')
 			if analyze_hashtag_dates:
 				analyze_hashtag_dates = False
 				warnings.add('"created_at" column is required to analyze hashtags by date. Skipping.')
-			if analyze_datetime:
-				analyze_datetime = False
+			if analyze_date or analyze_time:
+				analyze_time = False
+				analyze_date = False
 				warnings.add('"created_at" column is required to analyze date and time metrics. Skipping.')
 		if 'text' not in chunk and analyze_urls:
 			analyze_urls = False
@@ -104,9 +111,11 @@ async def parse_tweets(args):
 
 			if analyze_hashtags:
 				hashtag_metrics(tweet, hashtags, is_retweet)
+			if analyze_hashtag_dates:
 				hashtag_date_metrics(tweet, hashtag_dates, is_retweet)
-			if analyze_datetime:
+			if analyze_date:
 				date_metrics(tweet, date_set, is_retweet)
+			if analyze_time:
 				time_metrics(tweet, time_set, is_retweet)
 			if analyze_users:
 				user_metrics(tweet, user_set, is_retweet)
@@ -125,9 +134,11 @@ async def parse_tweets(args):
 
 	if analyze_hashtags:
 		save_hashtag_metrics(hashtags, save_file_name)
+	if analyze_hashtag_dates:
 		save_hashtag_date_metrics(hashtag_dates, save_file_name)
-	if analyze_datetime:
+	if analyze_date:
 		save_date_metrics(date_set, save_file_name)
+	if analyze_time:
 		save_time_metrics(time_set, save_file_name)
 	if analyze_users:
 		save_user_metrics(user_set, save_file_name)
@@ -397,12 +408,12 @@ if __name__ == '__main__':
 	p.add_argument(
 		'--analyze-urls',
 		action='store_true',
-		help='Use this to process/expand media/URLs'
+		help='Use this to process/expand media/URLs',
 	)
 	p.add_argument(
 		'--exclude-twitter-urls',
 		action='store_true',
-		help='Use this to exclude any url that expands to https://twitter.com/*'
+		help='Use this to exclude any url that expands to https://twitter.com/*',
 	)
 	p.add_argument(
 		'--no-keep-rt',
@@ -412,33 +423,38 @@ if __name__ == '__main__':
 	p.add_argument(
 		'--no-analyze-hashtags',
 		action='store_true',
-		help='Use this to NOT process hashtags'
+		help='Use this to NOT process hashtags',
 	)
 	p.add_argument(
-		'--no-analyze-datetime',
+		'--no-analyze-date',
 		action='store_true',
-		help='Use this to NOT process dates and times'
+		help='Use this to NOT process dates',
+	)
+	p.add_argument(
+		'--no-analyze-time',
+		action='store_true',
+		help='Use this to NOT process times within day',
 	)
 	p.add_argument(
 		'--no-analyze-users',
 		action='store_true',
-		help='Use this to NOT process users'
+		help='Use this to NOT process users',
 	)
 	p.add_argument(
 		'--max-redirect-depth',
 		type=int,
 		default=1,
-		help='Max depth to follow redirects when analyzing URLs. Default is the minimum: 1 (get link after t.co). WARNING: exponentially slower with each added layer of depth'
+		help='Max depth to follow redirects when analyzing URLs. Default is the minimum: 1 (get link after t.co). WARNING: exponentially slower with each added layer of depth',
 	)
 	p.add_argument(
 		'--from-date',
 		type=str,
-		help='Format: YYYY-MM-DD. Use only if you want to limit processing from a certain date (not datetime)'
+		help='Format: YYYY-MM-DD. Use only if you want to limit processing from a certain date (not datetime)',
 	)
 	p.add_argument(
 		'--to-date',
 		type=str,
-		help='Format: YYYY-MM-DD. Use only if you want to limit processing to a certain date (not datetime)'
+		help='Format: YYYY-MM-DD. Use only if you want to limit processing to a certain date (not datetime)',
 	)
 	p.add_argument(
 		'--csv-sep',
