@@ -42,6 +42,7 @@ async def parse_tweets(args):
 	max_redirect_depth = args['max_redirect_depth']
 	from_date = args['from_date']
 	to_date = args['to_date']
+	sep = args['csv_sep']
 	hashtags = {}
 	hashtag_dates = {}
 	date_set = {}
@@ -62,7 +63,7 @@ async def parse_tweets(args):
 	
 	Path("./results/metrics_%s/" % save_file_name).mkdir(parents=True, exist_ok=True)
 
-	for chunk in pd.read_csv(file_path, encoding="utf-8", chunksize=chunksize, iterator=True):
+	for chunk in pd.read_csv(file_path, encoding="utf-8", chunksize=chunksize, iterator=True, sep=sep):
 		# time filtering and timezone conversion
 		chunk.created_at = pd.to_datetime(chunk.created_at, utc=True)
 		if timezone is not None:
@@ -438,6 +439,13 @@ if __name__ == '__main__':
 		'--to-date',
 		type=str,
 		help='Format: YYYY-MM-DD. Use only if you want to limit processing to a certain date (not datetime)'
+	)
+	p.add_argument(
+		'--csv-sep',
+		type=str,
+		default=',',
+		choices=[',', ';', '\\t', '|'],
+		help='Separator for your csv file. Default: ","',
 	)
 
 	args = vars(p.parse_args())
