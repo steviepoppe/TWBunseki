@@ -1,6 +1,7 @@
 import argparse
 from csv import QUOTE_NONNUMERIC
 import itertools
+import re
 
 import pandas as pd
 
@@ -27,8 +28,62 @@ def filter_by_date(df, args):
 def filter_by_cols(df, args):
     print('Filtering by provided columns..')
     cols = list(itertools.chain.from_iterable([x.split(',') for x in args['col']]))  # support comma sep values
+    cols = [x.strip() for x in cols]
     df = df[cols]
     return df
+
+
+def filter_by_text_query(df, args):
+    def _or(first, second):
+        return first | second
+
+    def _and(first, second):
+        return first & second
+
+    def _not(first):
+        return ~first
+
+    print('Filtering by provided query..')
+    query = args['query']
+
+    # first, split
+    queries = re.findall(r'\'.+?\'|".+?"|\w+' , query)
+    queries = [x.strip().strip('\'').strip('"') for x in queries]
+
+    select_prev = None
+    op_prev = None
+    not_prev = False
+    # keyword, op, keyword
+    for part in queries:
+        is_op = part in ['OR', 'AND']
+        if is_op:
+            if not op_prev:
+                op_prev = part
+            else:
+                raise Exception('Malformed query. Expected: KEYWORD AND/OR KEYWORD')
+            not_prev = False
+        elif part == 'NOT':
+            not_prev = True
+        else:
+            select = df[args['text_col']].str.contains(part, case=False)
+            if not_prev:
+                select = _not(select)
+
+            if select_prev is None:
+                select_prev = select
+            else:
+                if op_prev == 'OR':
+                    select_prev = _or(select_prev, select)
+                elif op_prev == 'AND':
+                    select_prev = _and(select_prev, select)
+                else:
+                    raise Exception('Malformed query. Expected: KEYWORD AND/OR KEYWORD')
+                op_prev = None
+            not_prev = False
+
+    if select_prev is None:
+        raise Exception('Malformed query. Expected: KEYWORD AND/OR KEYWORD')
+    return df[select_prev]
 
 
 def filter_data(args):
@@ -38,7 +93,10 @@ def filter_data(args):
     if args['from_date'] or args['to_date'] or args['timezone']:
         df = filter_by_date(df, args)
 
-    if args['col']:
+    if args['query']:
+        df = filter_by_text_query(df, args)
+
+    if args['col']:  # has to be last in case other filtering involves excluded columns
         df = filter_by_cols(df, args)
 
     print(f"Finished filtering. Saving into {args['output_filename']}..")
@@ -82,6 +140,18 @@ if __name__ == '__main__':
         type=str,
         default='created_at',
         help='Name of the column with the date to filter with. Required for date filtering/tz conversion. Default: created_at',
+    )
+    p.add_argument(
+        '--text-col',
+        type=str,
+        default='text',
+        help='Name of the column with the text to query. Required for query. Default: text',
+    )
+    p.add_argument(
+        '-q',
+        '--query',
+        type=str,
+        help='Query specified text column with given substrings. Can use boolean operators AND/OR. NO NESTED RULES/PARANTHESES. Use - to exclude a substring. Wrap strings in single quotes if separated by space. E.g. -q "keyword1 OR keyword2 -keyword3"',
     )
     p.add_argument(
         '--from-date',
