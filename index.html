@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Twitter Bunseki</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="web/css/style.css">
+    <script src="https://unpkg.com/vue@3"></script>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Twitter Bunseki</h1>
+      <div>A collection of python scripts to fetch, filter, and analyze twitter data.</div>
+      
+      <h2>Available Scripts</h2>
+      <ul>
+        <li v-for="script in scripts"><a :href="script.src"><b>{{ script.name }}</b></a>: {{ script.desc }}</li>
+      </ul>
+    </div>
+  </body>
+  <script src="web/js/script.js"></script>
+</html>

@@ -14,16 +14,15 @@ import asyncio
 import argparse
 import csv
 from datetime import date, datetime
-from dateutil import parser
 import json
 from pathlib import Path
 import re
-import requests
 import sys
 import time
 from urllib.parse import urlparse
 
 import aiohttp
+from dateutil import parser
 import pandas as pd
 
 
