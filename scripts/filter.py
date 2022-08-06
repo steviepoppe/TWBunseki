@@ -151,7 +151,7 @@ if __name__ == '__main__':
         '-q',
         '--query',
         type=str,
-        help='Query specified text column with given substrings. Can use boolean operators AND/OR. NO NESTED RULES/PARANTHESES. Use - to exclude a substring. Wrap strings in single quotes if separated by space. E.g. -q "keyword1 OR keyword2 -keyword3"',
+        help='Query specified text column with given substrings. Can use boolean operators AND/OR and NOT. NO NESTED RULES/PARANTHESES. Wrap strings in single quotes if separated by space. E.g. -q "keyword1 AND keyword2 AND NOT keyword3"',
     )
     p.add_argument(
         '--from-date',
