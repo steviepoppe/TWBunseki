@@ -13,14 +13,21 @@
   </head>
   <body>
     <div id="app">
-      <h1>Twitter Bunseki</h1>
-      <div>A collection of python scripts to fetch, process, and analyze twitter data.</div>
+      <h1>{{ meta.title }}</h1>
+      <p>{{ meta.short_desc }}</p>
+      <p>{{ meta.long_desc }}</p>
       
+      <h2>Prerequisites</h2>
+      <p>{{ tutorial.desc }}</p>
+      <ol>
+        <li v-for="step in tutorial.steps"><span v-html="step.text"></span> <span v-if="step.links">[ <span v-for="(link, index) in step.links"> <a :href="link.href" :download="link.download">{{ link.text }}</a> <span v-if="index+1 < step.links.length"> | </span></span>]</span></li>
+      </ol>
       <h2>Available Scripts</h2>
-      <ul>
-        <li v-for="script in scripts"><a :href="script.src" download><b>{{ script.name }}</b></a>: {{ script.desc }}</li>
-      </ul>
       <div class="button" @click="download_all"><span>Download all<br>(+operational files)</span></div>
+      <div v-for="script in scripts">
+        <h3><a :href="script.src" download><b>{{ script.name }}</b></a>:</h3>
+        <p v-html="script.desc"></p>
+      </div>
     </div>
   </body>
   <script src="web/js/app.js"></script>

@@ -3,6 +3,13 @@ body {
     padding: 2em;
 }
 
+code {
+    background-color: #efefef;
+    padding: 0.2em;
+    padding-left: 0.5em;
+    padding-right:  0.5em;
+    border-radius: 0.4em;
+}
 
 .button{
   display: block;
