@@ -12,11 +12,11 @@
   <body>
     <div id="app">
       <h1>Twitter Bunseki</h1>
-      <div>A collection of python scripts to fetch, filter, and analyze twitter data.</div>
+      <div>A collection of python scripts to fetch, process, and analyze twitter data.</div>
       
       <h2>Available Scripts</h2>
       <ul>
-        <li v-for="script in scripts"><a :href="script.src"><b>{{ script.name }}</b></a>: {{ script.desc }}</li>
+        <li v-for="script in scripts"><a :href="script.src" download><b>{{ script.name }}</b></a>: {{ script.desc }}</li>
       </ul>
     </div>
   </body>
