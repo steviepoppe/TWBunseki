@@ -460,7 +460,7 @@ if __name__ == '__main__':
 		'--csv-sep',
 		type=str,
 		default=',',
-		choices=[',', ';', '\\t', '|'],
+		choices=[',', ';', '\t', '|'],
 		help='Separator for your csv file. Default: ","',
 	)
 
