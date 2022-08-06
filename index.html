@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="web/css/style.css">
     <script src="https://unpkg.com/vue@3"></script>
+    <script src="web/js/ext/jszip.min.js"></script>
   </head>
   <body>
     <div id="app">
@@ -18,7 +19,8 @@
       <ul>
         <li v-for="script in scripts"><a :href="script.src" download><b>{{ script.name }}</b></a>: {{ script.desc }}</li>
       </ul>
+      <div class="button" @click="download_zipped"><span>Download zipped</span></div>
     </div>
   </body>
-  <script src="web/js/script.js"></script>
+  <script src="web/js/app.js"></script>
 </html>
