@@ -12,7 +12,7 @@ before the max time span collected until process termination
 HAS to be run with academic creds
 
 Run:
-0. Fill BEARER_TOKEN in a file called settings.py (see example at settings.py.example)
+0. Fill BEARER_TOKEN in a file called settings.py
 1. Install pandas and tweepy (`$ pip install pandas tweepy`)
 2. Get all arguments from `$ python twitter_search.py --help`
 """

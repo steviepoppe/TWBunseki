@@ -29,11 +29,21 @@ createApp({
                 filename: 'get_metrics.py',
                 src: 'scripts/get_metrics.py'
             }
+        ],
+        other_files: [
+            {
+                filename: 'requirements.txt',
+                src: 'scripts/requirements.txt',
+            },
+            {
+                filename: 'settings.py',
+                src: 'scripts/settings.py.example'
+            }
         ]
       }
     },
     methods: {
-        download_zipped() {
+        download_all() {
             const comp = this;
             var zip = JSZip();
             var folder = zip.folder(comp.zipped_filename);
@@ -41,6 +51,11 @@ createApp({
             for (const i in comp.scripts) {
                 var fetched = fetch(comp.scripts[i].src).then(response => response.blob());
                 folder.file(comp.scripts[i].filename, fetched);
+            }
+
+            for (const j in comp.other_files) {
+                var fetched = fetch(comp.other_files[j].src).then(response => response.blob());
+                folder.file(comp.other_files[j].filename, fetched);
             }
 
             const blob = zip.generateAsync({type:'blob'}).then((blob) => {
