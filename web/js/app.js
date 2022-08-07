@@ -3,6 +3,8 @@ const { createApp } = Vue
 createApp({
     data() {
       return {
+        is_diy: false,
+        is_configure: false,
         meta: {
             title: 'Twitter Bunseki',
             short_desc: 'A collection of python scripts to fetch, process, and analyze Twitter data.',
@@ -63,7 +65,7 @@ createApp({
             },
             {
                 name: 'analyze',
-                desc: 'Analyze data using an number of configurable methods. Expects a csv formatted by <code>search</code> but will accept fewer columns depending on configuration.<br><br>'
+                desc: 'Analyze data using an number of configurable methods. Expects a csv formatted by <code>search</code> but will accept fewer columns depending on configuration (e.g. output from <code>filter</code>).<br><br>'
                 +'<b>Possible outputs:</b>'
                 + '<ul>'
                 +'<li>hashtag frequencies (also on certain months)</li>'
@@ -112,6 +114,9 @@ createApp({
                 a.click();
                 document.body.removeChild(a);
             });
+        },
+        show_configure() {
+            this.is_configure = true;
         }
     }
 }).mount('#app');

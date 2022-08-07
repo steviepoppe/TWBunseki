@@ -16,18 +16,29 @@
       <h1>{{ meta.title }}</h1>
       <p>{{ meta.short_desc }}</p>
       <p>{{ meta.long_desc }}</p>
-      
-      <h2>Prerequisites</h2>
-      <p>{{ tutorial.desc }}</p>
-      <ol>
-        <li v-for="step in tutorial.steps"><span v-html="step.text"></span> <span v-if="step.links">[ <span v-for="(link, index) in step.links"> <a :href="link.href" :download="link.download">{{ link.text }}</a> <span v-if="index+1 < step.links.length"> | </span></span>]</span></li>
-      </ol>
-      <h2>Available Scripts</h2>
-      <div class="button" @click="download_all"><span>Download all<br>(+operational files)</span></div>
+
+      <h2>About the scripts</h2>
       <div v-for="script in scripts">
         <h3><a :href="script.src" download><b>{{ script.name }}</b></a>:</h3>
         <p v-html="script.desc"></p>
       </div>
+
+      <h2>Choose your path</h2>
+      <div class="button" @click="download_all"><span>DIY: Download all scripts and run them yourself</span></div>
+      <div class="button" @click="show_configure"><span>Customize your own pipeline in the browser</span></div>
+
+      <h3>Prerequisites</h3>
+      <p>{{ tutorial.desc }}</p>
+      <ol>
+        <li v-for="step in tutorial.steps"><span v-html="step.text"></span> <span v-if="step.links">[ <span v-for="(link, index) in step.links"> <a :href="link.href" :download="link.download">{{ link.text }}</a> <span v-if="index+1 < step.links.length"> | </span></span>]</span></li>
+      </ol>
+
+      <div id="configure" v-show="is_configure">
+        <h2>Configure your own pipeline</h2>
+        <p>Here comes the magic~</p>
+      </div>
+
+
     </div>
   </body>
   <script src="web/js/app.js"></script>
