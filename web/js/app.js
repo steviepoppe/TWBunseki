@@ -116,7 +116,7 @@ createApp({
             });
         },
         show_configure() {
-            this.is_configure = true;
+            this.is_configure = !this.is_configure;
         }
     }
 }).mount('#app');
