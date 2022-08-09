@@ -541,7 +541,12 @@ createApp({
             });
         },
         show_configure() {
-            this.is_configure = !this.is_configure;
+            // this.is_configure = !this.is_configure;
+            var a = document.createElement('a');
+            a.href = '#configure-pipeline';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         },
         show_command(script) {
             var result_html = '';
