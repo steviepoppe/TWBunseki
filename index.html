@@ -252,7 +252,7 @@
                         <span v-for="(input, index) in element.input">
                           <input :type="input.type" :style="{width: input.width, margin: input.margin}" :data-index="index" :data-count="curr" :data-script="scr_index" :data-element="el_index" @input="handle_config_value" :placeholder="input.placeholder" display="inline">
                         </span>
-                        <div class="button" @click="increment(scr_index, el_index)">+</div>
+                        <div class="button" @click="increment(scr_index, el_index)" v-show="curr == element.count">+</div>
                       </span>
                     </div>
                   </div>
