@@ -43,7 +43,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="web/css/style.css?v=2">
+    <link rel="stylesheet" href="web/css/app.css?v=2">
     <script src="https://unpkg.com/vue@3"></script>
     <script src="web/js/ext/jszip.min.js"></script>
   </head>
@@ -234,17 +234,32 @@
           <div id="configure" v-show="is_configure">
             <h2>Configure your own pipeline</h2>
             <p>Choose the scripts you would like to use, configure them, and download a ready-to-run shell script with all the commands + all the necessary files.</p>
-            <form id="confgire-form">
-              <div v-for="script in scripts">
+            <form id="configure-form">
+              <div v-for="(script, scr_index) in scripts">
                 <h3><input class="script-check" type="checkbox" :id="script.name" :name="script.name" v-model="script.checked"><label class="script-label">{{ script.name }}</label></h3>
                 <div class="script-config" v-show="script.checked">
                   <div v-html="show_command(script)" class="script-config-commands"></div>
-                  <div v-for="element in script.config">
-                    <h4>{{ element.name }}: </h4>
-                    <span v-html="element.desc"></span>
-                    <input class="script-config-input" :type="element.input.type" :placeholder="element.input.placeholder" v-model="element.value">
+                  <div v-for="(element, el_index) in script.config">
+                    <h4>{{ element.name }}<span v-if="element.required" class="red">*</span>:</h4>
+                    <span v-if="element.required"><b>Required</b>. </span><span v-html="element.desc"></span>
+                    <input class="script-config-input" :type="element.input.type" :placeholder="element.input.placeholder" v-model="element.value" v-if="element.input.type !== 'select' && element.type !== 'config'">
+                    <select v-if="element.input.type === 'select'" v-model="element.value">
+                      <option selected value> -- select an option -- </option>
+                      <option v-for="option in element.input.options" :value="option.value">{{ option.name }}</option>
+                    </select>
+                    <div v-if="element.type == 'config'">
+                      <span v-for="curr in element.count">
+                        <span v-for="(input, index) in element.input">
+                          <input :type="input.type" :style="{width: input.width, margin: input.margin}" :data-index="index" :data-count="curr" :data-script="scr_index" :data-element="el_index" @input="handle_config_value" :placeholder="input.placeholder" display="inline">
+                        </span>
+                        <div class="button" @click="increment(scr_index, el_index)">+</div>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
+              <div class="button" @click="download_configured(true)" title="Download scripts + commands + settings"><span>Download everything</span></div>
+              <div class="button" @click="download_configured(false)" title="Download only commands + settings"><span>Download config only</span></div>
             </form>
           </div>
 
