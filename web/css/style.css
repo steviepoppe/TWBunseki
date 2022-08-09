@@ -2,14 +2,14 @@ body {
     font-family: 'Inconsolata', monospace;
     padding: 2em;
 }
-
+/*
 code {
     background-color: #efefef;
     padding: 0.2em;
     padding-left: 0.5em;
     padding-right:  0.5em;
     border-radius: 0.4em;
-}
+}*/
 
 .button{
   display: inline-block;
@@ -43,7 +43,7 @@ code {
   left: 0;
   width: 0;
   height: 100%;
-  background: #ff003b;
+  background: #c10000;
   transition: all .35s;
   color:  white;
 }
@@ -55,4 +55,61 @@ code {
 
 .button:hover:after{
   width: 100%;
+}
+
+input[type=checkbox] {
+    cursor:  grab;
+}
+
+.script-label {
+    padding:  0.2em;
+}
+
+/*.script-check:checked + .script-label, .script-check:hover + .script-label {
+  background-color:  #c10000;
+  color:  white;
+}
+*/
+.script-config {
+    padding-left: 2em;
+    border-left: 2px solid black;
+    margin-left: 1.2em;
+}
+
+.script-config h4 {
+    display: inline;
+    font-weight: bold !important;
+}
+
+.script-config-input {
+    font-family: inherit;
+    font-size: 1em;
+    margin-top: 0.5em;
+    width:  50%;
+    margin-bottom:  0.5em;
+    display: block;
+}
+
+.script-config-input[type=checkbox] {
+    width:  inherit;
+    display: inline;
+}
+
+.script-config-commands {
+    border: solid 1px #f3d5e7;
+    border-radius: 10px;
+    padding: 2em;
+    margin-bottom: 2em;
+    background-color: #fbf6f7;
+}
+
+.script-config-commands pre {
+    color: #c10000;
+}
+
+.unselectable {
+    user-select: none;
+}
+/*a {
+    color:  #c10000;
 }
