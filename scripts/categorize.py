@@ -94,7 +94,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     categories = {}
-    with open(args['categories']) as f:
+    with open(args['categories'], encoding='utf-8') as f:
         categories = json.loads(f.read())['categories']
 
     df = pd.read_csv(args['input_data'])
