@@ -156,7 +156,7 @@ createApp({
                     {
                         name: 'Output Filename',
                         required: false,
-                        desc: 'Full or relative path to the output/filtered csv file. Defualt: <code>output.csv</code>',
+                        desc: 'Full or relative path to the output/filtered csv file. Default: <code>output.csv</code>',
                         type: 'command',
                         arg: '-o',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
@@ -265,7 +265,7 @@ createApp({
                     {
                         name: 'Output Filename (Categorized)',
                         required: false,
-                        desc: 'Full or relative path to the output/categorized csv file. Defualt: <code>results/categorize_output.csv</code>',
+                        desc: 'Full or relative path to the output/categorized csv file. Default: <code>results/categorize_output.csv</code>',
                         type: 'command',
                         arg: '-o',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
@@ -274,7 +274,7 @@ createApp({
                     {
                         name: 'Output Filename (Word Frequencies)',
                         required: false,
-                        desc: 'Full or relative path to the output/categorized csv file. Defualt: <code>results/keyword_frequencies.csv</code>',
+                        desc: 'Full or relative path to the output/categorized csv file. Default: <code>results/keyword_frequencies.csv</code>',
                         type: 'command',
                         arg: '-of',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
