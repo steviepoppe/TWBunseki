@@ -6,6 +6,17 @@ import re
 import pandas as pd
 
 
+pd.options.mode.chained_assignment = None
+
+
+def remove_media_urls(df, args):
+    def _remove_media(text):
+        return re.sub(r'https://t.co/[a-zA-Z0-9]+', '', text)
+
+    df[args['text_col']] = df[args['text_col']].apply(lambda x: re.sub(r'https://t.co/[a-zA-Z0-9]+', '', x))
+    return df
+
+
 def filter_by_date(df, args):
     print('Filtering by date params..')
     date_col = args['date_col']
@@ -93,6 +104,12 @@ def filter_data(args):
     if args['from_date'] or args['to_date'] or args['timezone']:
         df = filter_by_date(df, args)
 
+    if args['no_keep_rt']:
+        df = df[df['is_retweet'] == False]
+
+    if args['remove_media_urls']:
+        df = remove_media_urls(df, args)
+
     if args['query']:
         df = filter_by_text_query(df, args)
 
@@ -152,6 +169,16 @@ if __name__ == '__main__':
         '--query',
         type=str,
         help='Query specified text column with given substrings. Can use boolean operators AND/OR and NOT. NO NESTED RULES/PARANTHESES. Wrap strings in single quotes if separated by space. E.g. -q "keyword1 AND keyword2 AND NOT keyword3"',
+    )
+    p.add_argument(
+        '--no-keep-rt',
+        action='store_true',
+        help='Get only rows where is_retweet == False',
+    )
+    p.add_argument(
+        '--remove-media-urls',
+        action='store_true',
+        help='Remove t.co URLs from text column',
     )
     p.add_argument(
         '--from-date',

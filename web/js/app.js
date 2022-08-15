@@ -165,10 +165,10 @@ createApp({
                     {
                         name: 'Columns',
                         required: false,
-                        desc: 'Columns to keep. Separated with space or comma. If any are set, only those are saved. Applied after processing. Can be multiple. E.g. <code>created_at text</code>',
+                        desc: 'Columns to keep. Separated with comma. If any are set, only those are saved. Applied after processing. Can be multiple. E.g. <code>created_at,text</code>',
                         type: 'command',
                         arg: '-c',
-                        input: {type: 'text', placeholder: 'Use quotation marks for columns that have a space in their name'},
+                        input: {type: 'text'},
                         value: null,
                     },
                     {
@@ -223,6 +223,24 @@ createApp({
                         type: 'command',
                         arg: '-q',
                         input: {type: 'text', placeholder: 'Do not mix AND/OR operators in the same expression'},
+                        value: null,
+                    },
+                    {
+                        name: 'Remove media URLs',
+                        required: false,
+                        desc: 'Remove t.co URLs from the specified text column',
+                        type: 'command',
+                        arg: '--remove-media-urls',
+                        input: {type: 'checkbox'},
+                        value: null,
+                    },
+                    {
+                        name: 'Exclude RTs',
+                        required: false,
+                        desc: 'Get only rows where is_retweet == False',
+                        type: 'command',
+                        arg: '--no-keep-rt',
+                        input: {type: 'checkbox'},
                         value: null,
                     },
                 ]
