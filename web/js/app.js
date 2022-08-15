@@ -307,6 +307,15 @@ createApp({
                         input: {type: 'text'},
                         value: null,
                     },
+                    {
+                        name: 'Categorize Entire Conversations',
+                        required: false,
+                        desc: 'Apply the same categories to entire conversations. Uses the column "conversation_id" for grouping',
+                        type: 'command',
+                        arg: '--categorize-entire-conversation',
+                        input: {type: 'checkbox'},
+                        value: null,
+                    },
                 ]
             },
             {

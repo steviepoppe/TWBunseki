@@ -29,25 +29,32 @@ def clean_keywords(categories):
     return categories
 
 
-def belongs(category, keywords, freq, text):
+def belongs(category, keywords, freq, conversations, text_col, row):
     belongs = 0
     for keyword in keywords:
         freq[keyword] = freq.get(keyword, 0)
-        if keyword in text.lower():
+        if keyword in row[text_col].lower():
             freq[keyword] += 1
             belongs = 1
+    if conversations is not None:
+        conversation_categories = conversations.get(row['conversation_id'], {})
+        already_belongs = conversation_categories.get(category, 0) == 1
+        conversation_categories[category] = belongs if not already_belongs else 1
+        conversations[row['conversation_id']] = conversation_categories
     return belongs
 
 
-def categorize(categories, df, text_col):
+def categorize(categories, df, args):
+    text_col = args['text_column']
     categories = clean_keywords(categories)
     freq = {}
+    conversations = {} if args['categorize_entire_conversation'] and 'conversation_id' in df else None
     df[text_col] = df[text_col].astype(str)
 
     for category in categories:
-        df[category] = df[text_col].apply(lambda x: belongs(category, categories[category], freq, x))
-
-
+        df[category] = df.apply(lambda x: belongs(category, categories[category], freq, conversations, text_col, x), axis=1)
+        if conversations is not None:
+            df[category] = df.apply(lambda x: x[category] or conversations[x['conversation_id']][category], axis=1)
     freq_data = [{'keyword': k, 'frequency': v} for k, v in freq.items()]
     freq_df = pd.DataFrame(freq_data)
     return df, freq_df
@@ -90,6 +97,11 @@ if __name__ == '__main__':
         default='text',
         help='Name of the column with the text data. Default: "text"',
     )
+    parser.add_argument(
+        '--categorize-entire-conversation',
+        action='store_true',
+        help='Apply the same categories to entire conversations. Uses the column "conversation_id" for grouping',
+    )
 
     args = vars(parser.parse_args())
 
@@ -99,7 +111,7 @@ if __name__ == '__main__':
 
     df = pd.read_csv(args['input_data'])
     print('Categorizing...')
-    df, freq_df = categorize(categories=categories, df=df, text_col=args['text_column'])
+    df, freq_df = categorize(categories=categories, df=df, args=args)
     df.to_csv(args['output_data'], mode='w+', encoding='utf-8', index=False, quoting=QUOTE_NONNUMERIC)
     freq_df.to_csv(args['output_frequencies'], mode='w+', encoding='utf-8', index=False, quoting=QUOTE_NONNUMERIC)
     print('Done!')
