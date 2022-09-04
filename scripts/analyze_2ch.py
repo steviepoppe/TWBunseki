@@ -13,11 +13,15 @@ def merge(pattern):
         raise Exception(f'No files found for the given pattern: {pattern}')
 
     dfs = []
+    meta = []
     for file in files:
+        print(f'Merging file: {file}')
+        thread_id = str(uuid.uuid4())
+        meta.append({'filepath': file, 'thread_id': thread_id})
         df = pd.read_csv(file)
-        df = df.assign(thread_id=str(uuid.uuid4()))  # so every thread has its own ID
+        df = df.assign(thread_id=thread_id)  # so every thread has its own ID
         dfs.append(df)
-    return pd.concat(dfs, ignore_index=True)
+    return pd.concat(dfs, ignore_index=True), pd.DataFrame(meta)
 
 
 def analyze(args):
@@ -30,9 +34,10 @@ def analyze(args):
         # directory already exists
         pass
 
-    df = merge(args['filepath_pattern'])
+    df, meta_df = merge(args['filepath_pattern'])
     df.to_csv(args['save_folder'] + 'merged_data.csv', mode='w+', encoding='utf-8', index=False, quoting=QUOTE_NONNUMERIC)
-
+    meta_df.to_csv(args['save_folder'] + 'merged_data_meta.csv', mode='w+', encoding='utf-8', index=False, quoting=QUOTE_NONNUMERIC)
+    
     stats = df.groupby('thread_id')['UserID'].nunique().reset_index()
     stats.to_csv(args['save_folder'] + 'unique_users.csv', mode='w+', encoding='utf-8', index=False, quoting=QUOTE_NONNUMERIC)
 
