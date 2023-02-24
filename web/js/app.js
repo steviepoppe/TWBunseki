@@ -459,6 +459,51 @@ createApp({
                         value: null,
                     },
                 ]
+            },
+            {
+                name: 're-analyze_media',
+                desc: 'Re-analyze Media URLs that encountered errors (error_expanding == True)',
+                filename: 'reanalyze_media.py',
+                src: 'scripts/reanalyze_media.py',
+                checked: false,
+                config: [
+                    {
+                        name: 'Input Filename',
+                        required: true,
+                        desc: 'Full or relative path to the csv file. E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-f',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Chunk Size',
+                        required: false,
+                        desc: 'Size of processing chunk. Default: 10K (rows)',
+                        type: 'command',
+                        arg: '-c',
+                        input: {type: 'number'},
+                        value: null,
+                    },
+                    {
+                        name: 'Max Redirect Depth',
+                        required: false,
+                        desc: 'Max depth to follow redirects when analyzing URLs. Default is the minimum: 1 (get link after t.co). <b>WARNING:</b> exponentially slower with each added layer of depth.',
+                        type: 'command',
+                        arg: '--max-redirect-depth',
+                        input: {type: 'number'},
+                        value: null,
+                    },
+                    {
+                        name: 'CSV Separator',
+                        required: false,
+                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
+                        type: 'command',
+                        arg: '--csv-sep',
+                        input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
+                        value: null,
+                    },
+                ]
             }
         ],
         other_files: [
