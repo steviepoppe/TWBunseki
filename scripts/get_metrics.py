@@ -246,7 +246,7 @@ async def expand_url(session, url, max_redirect_depth):
 	try:
 		while redirect < max_redirect_depth:
 			async with session.head(next_url, allow_redirects=False) as res:
-				next_url = res.headers.get('location', '')
+				next_url = res.headers.get('location', res.headers.get('X-Redirect-To', ''))
 			if next_url == '':
 				break
 			if next_url.startswith('/'):
