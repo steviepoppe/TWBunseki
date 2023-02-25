@@ -504,6 +504,42 @@ createApp({
                         value: null,
                     },
                 ]
+            },
+            {
+                name: 'expand_media_metrics',
+                desc: 'Get more granular media metrics',
+                filename: 'expand_media_metrics.py',
+                src: 'scripts/expand_media_metrics.py',
+                checked: false,
+                config: [
+                    {
+                        name: 'Corpus Filename',
+                        required: true,
+                        desc: 'Full or relative path to the corpus csv file (output of <code>search</code>). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-cf',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Expanded URL Data Filename',
+                        required: true,
+                        desc: 'Full or relative path to the csv file with Expanded URL data (output of <code>get_metrics</code>). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-euf',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'CSV Separator',
+                        required: false,
+                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
+                        type: 'command',
+                        arg: '--csv-sep',
+                        input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
+                        value: null,
+                    },
+                ]
             }
         ],
         other_files: [
