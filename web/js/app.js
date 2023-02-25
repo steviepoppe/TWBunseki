@@ -461,8 +461,35 @@ createApp({
                 ]
             },
             {
+                name: 'extract_media',
+                desc: 'Get all links out of the twitter corpus (from search.py). STEP ONE in media pipeline.',
+                filename: 'extract_media.py',
+                src: 'scripts/extract_media.py',
+                checked: false,
+                config: [
+                    {
+                        name: 'Corpus Filename',
+                        required: true,
+                        desc: 'Full or relative path to the corpus csv file (output of <code>search</code>). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-cf',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'CSV Separator',
+                        required: false,
+                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
+                        type: 'command',
+                        arg: '--csv-sep',
+                        input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
+                        value: null,
+                    },
+                ]
+            },
+            {
                 name: 're-analyze_media',
-                desc: 'Re-analyze Media URLs that encountered errors (error_expanding == True)',
+                desc: 'Re-analyze Media URLs that encountered errors (error_expanding == True). STEP TWO in media pipeline.',
                 filename: 'reanalyze_media.py',
                 src: 'scripts/reanalyze_media.py',
                 checked: false,
@@ -506,25 +533,16 @@ createApp({
                 ]
             },
             {
-                name: 'expand_media_metrics',
-                desc: 'Get more granular media metrics',
-                filename: 'expand_media_metrics.py',
-                src: 'scripts/expand_media_metrics.py',
+                name: 'process_expanded_url_data',
+                desc: 'Clean up expanded URL data. Adds subdomain/root domain and cleans up youtube links. STEP THREE in media pipeline.',
+                filename: 'process_expanded_url_data.py',
+                src: 'scripts/process_expanded_url_data.py',
                 checked: false,
                 config: [
                     {
-                        name: 'Corpus Filename',
-                        required: true,
-                        desc: 'Full or relative path to the corpus csv file (output of <code>search</code>). E.g. <code>results/my_data.csv</code>',
-                        type: 'command',
-                        arg: '-cf',
-                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
-                        value: null,
-                    },
-                    {
                         name: 'Expanded URL Data Filename',
                         required: true,
-                        desc: 'Full or relative path to the csv file with Expanded URL data (output of <code>get_metrics</code>). E.g. <code>results/my_data.csv</code>',
+                        desc: 'Full or relative path to the corpus csv file (output of <code>reanalyze_media</code> or <code>get_metrics</code>). E.g. <code>results/my_data.csv</code>',
                         type: 'command',
                         arg: '-euf',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},

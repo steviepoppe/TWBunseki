@@ -19,3 +19,5 @@ tweepy==4.10.0
 urllib3==1.26.10
 yarl==1.7.2
 tldextract==3.4.0
+urlextract==1.8.0
+tqdm==4.64.1
