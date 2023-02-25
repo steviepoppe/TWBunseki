@@ -534,7 +534,7 @@ createApp({
             },
             {
                 name: 'process_expanded_url_data',
-                desc: 'Clean up expanded URL data. Adds subdomain/root domain and cleans up youtube links. STEP THREE in media pipeline.',
+                desc: 'Clean up expanded URL data. Adds subdomain/root domain and cleans up links. STEP THREE in media pipeline.',
                 filename: 'process_expanded_url_data.py',
                 src: 'scripts/process_expanded_url_data.py',
                 checked: false,
