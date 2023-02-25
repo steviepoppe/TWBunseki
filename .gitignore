@@ -2,6 +2,7 @@ scripts/settings.py
 scripts/results/
 scripts/output.csv
 .DS_Store
+Pipfile*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
