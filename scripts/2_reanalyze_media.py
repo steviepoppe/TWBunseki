@@ -38,17 +38,17 @@ async def reanalyze(args):
 		expanded_df_records.extend(expanded_chunk)
 		print('--> writing tmp data...')
 		tmp_df = pd.DataFrame.from_records(expanded_chunk)
-		tmp_df.to_csv(tmp_file_name, mode=mode,index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
+		tmp_df.to_csv(tmp_file_name, mode=mode, index=False, encoding='utf-8', errors='backslashreplace', quoting=csv.QUOTE_NONNUMERIC)
 		mode = 'a'
 	print('Done processing!')
 	print('Overwriting original file..')
 	result_df = pd.DataFrame.from_records(expanded_df_records)
-	print(f'Writing raw data to {filename}...')
-	result_df.to_csv(file_name, mode='w+',index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
+	print(f'Writing raw data to {file_name}...')
+	result_df.to_csv(file_name, mode='w+',index=False, encoding='utf-8', errors='backslashreplace', quoting=csv.QUOTE_NONNUMERIC)
 
 	grouped_filename = file_name.removesuffix('.csv') + '_grouped' + '.csv'
 	print(f'Writing grouped data by URL to {grouped_filename}...')
-	result_df.groupby("expanded_url").sum().reset_index().to_csv(f'{grouped_filename}', mode='w+',index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
+	result_df.groupby("expanded_url").sum().reset_index().to_csv(f'{grouped_filename}', mode='w+',index=False, errors='backslashreplace', encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
 
 	errors_before = len(df[df.error_expanding == True])
 	errors_after = len(result_df[result_df.error_expanding == True])
@@ -60,7 +60,7 @@ async def expand_media_urls(df_records, max_redirect_depth):
 	async with aiohttp.ClientSession() as session:
 		tasks = []
 		for row in df_records:
-			if row['error_expanding']:
+			if str(row['error_expanding']).lower() == 'true':
 				tasks.append(asyncio.ensure_future(expand_url(session, row, max_redirect_depth)))
 			else:
 				result_records.append(row)
