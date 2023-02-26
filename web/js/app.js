@@ -540,6 +540,33 @@ createApp({
                 checked: false,
                 config: [
                     {
+                        name: 'Expanded URL Data Filename',
+                        required: true,
+                        desc: 'Full or relative path to the corpus csv file (output of <code>reanalyze_media</code> or <code>get_metrics</code>). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-euf',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'CSV Separator',
+                        required: false,
+                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
+                        type: 'command',
+                        arg: '--csv-sep',
+                        input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
+                        value: null,
+                    },
+                ]
+            },
+            {
+                name: 'expand_media_metrics',
+                desc: 'Expand media metrics based on results of previous steps. STEP FOUR in media pipeline.',
+                filename: '4_expand_media_metrics.py',
+                src: 'scripts/4_expand_media_metrics.py',
+                checked: false,
+                config: [
+                    {
                         name: 'Data-per-tweet Filename',
                         required: true,
                         desc: 'Full or relative path to the data per tweet csv file (output of <code>extract_media</code>). E.g. <code>results/my_data.csv</code>',
@@ -563,33 +590,6 @@ createApp({
                         desc: 'Full or relative path store resulting csv files (will be edited with suffixes). E.g. <code>results/my_data.csv</code>',
                         type: 'command',
                         arg: '-of',
-                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
-                        value: null,
-                    },
-                    {
-                        name: 'CSV Separator',
-                        required: false,
-                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
-                        type: 'command',
-                        arg: '--csv-sep',
-                        input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
-                        value: null,
-                    },
-                ]
-            },
-            {
-                name: 'expand_media_metrics',
-                desc: 'Expand media metrics based on results of previous steps. STEP FOUR in media pipeline.',
-                filename: '4_expand_media_metrics.py',
-                src: 'scripts/4_expand_media_metrics.py',
-                checked: false,
-                config: [
-                    {
-                        name: 'Expanded URL Data Filename',
-                        required: true,
-                        desc: 'Full or relative path to the corpus csv file (output of <code>reanalyze_media</code> or <code>get_metrics</code>). E.g. <code>results/my_data.csv</code>',
-                        type: 'command',
-                        arg: '-euf',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
                         value: null,
                     },
