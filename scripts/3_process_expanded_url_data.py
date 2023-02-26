@@ -7,6 +7,7 @@ from urllib.parse import urlparse, parse_qs, urljoin, urlencode
 
 import pandas as pd
 import tldextract
+from tqdm import tqdm
 
 UNWANTED_QUERIES = [
 	'utm_source',
@@ -32,6 +33,15 @@ def get_subdomain(url):
 	subdomain = tldextract.extract(url).subdomain
 	return subdomain if subdomain != 'www' else ''
 
+def follow_google(url):
+	parsed_url = urlparse(url)
+	query = parse_qs(parsed_url.query)
+	domain = get_domain(url)
+
+	if domain.startswith('google.com') and parsed_url.path == '/url' and 'url' in query:
+		return query['url'][0]
+
+	return url
 
 def clean_queries(row):
 	url = row['expanded_url']
@@ -43,7 +53,7 @@ def clean_queries(row):
 		v_id = query['v'][0]
 		return f'https://youtube.com/watch?v={v_id}'
 
-	# 2. Campaign info
+	# 2. Remove Campaign info
 	queryless_url = urljoin(url, parsed_url.path)
 	if not queryless_url.endswith('/'):
 		queryless_url += '/'
@@ -65,6 +75,9 @@ def process_expanded_df(args):
 
 	print(f'Reading expanded URL data from {file_name}...')
 	expanded_df = pd.read_csv(file_name, encoding='utf-8', sep=sep)
+
+	print(f'Following Google redirect URLs...')
+	expanded_df['expanded_url'] = expanded_df['expanded_url'].apply(follow_google)
 
 	print(f'Getting root domains...')
 	expanded_df['root_domain'] = expanded_df['expanded_url'].apply(get_domain)
