@@ -50,6 +50,8 @@ def expand_media_metrics(args):
 	expanded_df = pd.read_csv(processed_expanded_file_name, encoding='utf-8', sep=sep)
 
 	merged_df = tweet_data_df.merge(expanded_df, how='left', on='url')
+	if 'total_tweets_in_set' in merged_df:
+		merged_df = merged_df.drop(columns=['total_tweets_in_set'])
 
 	archived_df = add_archive_links(merged_df)
 	save_df(archived_df, output_filename, '_with_archived_links')

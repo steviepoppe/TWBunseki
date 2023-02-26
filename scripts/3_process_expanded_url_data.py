@@ -87,7 +87,7 @@ def process_expanded_df(args):
 
 	print(f'Cleaning links...')
 	expanded_df['clean_expanded_url'] = expanded_df.apply(clean_queries, axis=1)
-	expanded_df = expanded_df[['url', 'expanded_url', 'clean_expanded_url', 'domain', 'root_domain', 'sub_domain']]
+	expanded_df = expanded_df[['url', 'expanded_url', 'clean_expanded_url', 'domain', 'root_domain', 'sub_domain', 'total_tweets_in_set']]
 	
 	save_file_name = file_name.removesuffix('.csv') + '_processed' + '.csv'
 	print(f'Saving processed expanded URL data to {save_file_name}...')
