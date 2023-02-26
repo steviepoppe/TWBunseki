@@ -21,6 +21,7 @@ UNWANTED_QUERIES = [
 	'_utm_term',
 	'_utm_content',
 	'fbclid',
+	'gclid',
 	'ref',
 ]
 
