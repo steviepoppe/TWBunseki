@@ -1,5 +1,5 @@
 """
-todo
+STEP 2 IN MEDIA PIPELINE
 """
 import asyncio
 import argparse

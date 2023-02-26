@@ -1,3 +1,6 @@
+"""
+STEP THREE IN MEDIA PIPELINE
+"""
 import argparse
 import csv
 from urllib.parse import urlparse, parse_qs, urljoin, urlencode
@@ -17,6 +20,7 @@ UNWANTED_QUERIES = [
 	'_utm_term',
 	'_utm_content',
 	'fbclid',
+	'ref',
 ]
 
 def get_domain(url):
@@ -62,14 +66,21 @@ def process_expanded_df(args):
 	print(f'Reading expanded URL data from {file_name}...')
 	expanded_df = pd.read_csv(file_name, encoding='utf-8', sep=sep)
 
+	print(f'Getting root domains...')
 	expanded_df['root_domain'] = expanded_df['expanded_url'].apply(get_domain)
+
+	print(f'Getting subdomains...')
 	expanded_df['sub_domain'] = expanded_df['expanded_url'].apply(get_subdomain)
+
+	print(f'Cleaning links...')
 	expanded_df['clean_expanded_url'] = expanded_df.apply(clean_queries, axis=1)
 	expanded_df = expanded_df[['url', 'expanded_url', 'clean_expanded_url', 'domain', 'root_domain', 'sub_domain']]
 	
 	save_file_name = file_name.removesuffix('.csv') + '_processed' + '.csv'
 	print(f'Saving processed expanded URL data to {save_file_name}...')
 	expanded_df.to_csv(save_file_name, mode='w+',index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
+
+	print('Done!')
 
 
 

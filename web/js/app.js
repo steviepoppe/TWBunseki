@@ -463,8 +463,8 @@ createApp({
             {
                 name: 'extract_media',
                 desc: 'Get all links out of the twitter corpus (from search.py). STEP ONE in media pipeline.',
-                filename: 'extract_media.py',
-                src: 'scripts/extract_media.py',
+                filename: '1_extract_media.py',
+                src: 'scripts/1_extract_media.py',
                 checked: false,
                 config: [
                     {
@@ -490,8 +490,8 @@ createApp({
             {
                 name: 're-analyze_media',
                 desc: 'Re-analyze Media URLs that encountered errors (error_expanding == True). STEP TWO in media pipeline.',
-                filename: 'reanalyze_media.py',
-                src: 'scripts/reanalyze_media.py',
+                filename: '2_reanalyze_media.py',
+                src: 'scripts/2_reanalyze_media.py',
                 checked: false,
                 config: [
                     {
@@ -535,8 +535,53 @@ createApp({
             {
                 name: 'process_expanded_url_data',
                 desc: 'Clean up expanded URL data. Adds subdomain/root domain and cleans up links. STEP THREE in media pipeline.',
-                filename: 'process_expanded_url_data.py',
-                src: 'scripts/process_expanded_url_data.py',
+                filename: '3_process_expanded_url_data.py',
+                src: 'scripts/3_process_expanded_url_data.py',
+                checked: false,
+                config: [
+                    {
+                        name: 'Data-per-tweet Filename',
+                        required: true,
+                        desc: 'Full or relative path to the data per tweet csv file (output of <code>extract_media</code>). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-dptf',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Expanded URL Data Filename',
+                        required: true,
+                        desc: 'Full or relative path to the processed expanded URL csv file (output of <code>process_expanded_url_data</code>). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-peuf',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Output Filename',
+                        required: true,
+                        desc: 'Full or relative path store resulting csv files (will be edited with suffixes). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-of',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'CSV Separator',
+                        required: false,
+                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
+                        type: 'command',
+                        arg: '--csv-sep',
+                        input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
+                        value: null,
+                    },
+                ]
+            },
+            {
+                name: 'expand_media_metrics',
+                desc: 'Expand media metrics based on results of previous steps. STEP FOUR in media pipeline.',
+                filename: '4_expand_media_metrics.py',
+                src: 'scripts/4_expand_media_metrics.py',
                 checked: false,
                 config: [
                     {
