@@ -40,7 +40,9 @@ def get_data_per_tweet(corpus_df):
 
 
 def prep_for_reanalyze(tweet_data_df):
-	df = tweet_data_df[['url']]
+	df = tweet_data_df[['url', 'user_screen_name', 'tweet_retweet_count']]
+	df = df.assign(total_tweets_in_set=1)
+	df = df.groupby(['url', 'user_screen_name']).sum().reset_index()
 	return df.assign(expanded_url='', domain='', error_expanding=True)
 
 
@@ -51,16 +53,16 @@ def process_data_df(args):
 	print(f'Reading corpus from {file_name}...')
 	corpus_df = pd.read_csv(file_name, encoding='utf-8', sep=sep)
 
-	print(f'Getting data on the tweet level...')
+	print(f'Getting links from tweets...')
 	tweet_data_df = get_data_per_tweet(corpus_df)
 
-	save_file_name = file_name.removesuffix('.csv') + '_data_per_tweet_for_expand_media_metrics' + '.csv'
-	print(f'Saving data on the tweet level to {save_file_name}...')
+	save_file_name = file_name.removesuffix('.csv') + '_tweet_links' + '.csv'
+	print(f'Saving links from tweets to {save_file_name}...')
 	tweet_data_df.reset_index(drop=True, inplace=True)
 	tweet_data_df.to_csv(save_file_name, mode='w+',index=True, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
 
-	reanalyze_save_file_name = file_name.removesuffix('.csv') + '_data_for_reanalyze' + '.csv'
-	print(f'Saving data to be used by reanalyze_media to {reanalyze_save_file_name}...')
+	reanalyze_save_file_name = file_name.removesuffix('.csv') + '_dictionary' + '.csv'
+	print(f'Saving url dictionary data (for reanalyze) {reanalyze_save_file_name}...')
 	reanalyze_df = prep_for_reanalyze(tweet_data_df)
 	reanalyze_df.to_csv(reanalyze_save_file_name, mode='w+',index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
 

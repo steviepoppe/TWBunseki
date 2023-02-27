@@ -17,7 +17,6 @@ async def reanalyze(args):
 	file_name = args['filename']
 	max_redirect_depth = args['max_redirect_depth']
 	chunksize = args['chunk_size']
-	sep = args['csv_sep']
 
 	df = pd.read_csv(file_name, encoding='utf-8', sep=sep)
 
@@ -38,7 +37,8 @@ async def reanalyze(args):
 		expanded_df_records.extend(expanded_chunk)
 		print('--> writing tmp data...')
 		tmp_df = pd.DataFrame.from_records(expanded_chunk)
-		tmp_df.to_csv(tmp_file_name, mode=mode, index=False, encoding='utf-8', errors='backslashreplace', quoting=csv.QUOTE_NONNUMERIC)
+		header = True if mode != 'a' else False
+		tmp_df.to_csv(tmp_file_name, mode=mode, index=False, header=header, encoding='utf-8', errors='backslashreplace', quoting=csv.QUOTE_NONNUMERIC)
 		mode = 'a'
 	print('Done processing!')
 	print('Overwriting original file..')
@@ -46,9 +46,9 @@ async def reanalyze(args):
 	print(f'Writing raw data to {file_name}...')
 	result_df.to_csv(file_name, mode='w+',index=False, encoding='utf-8', errors='backslashreplace', quoting=csv.QUOTE_NONNUMERIC)
 
-	grouped_filename = file_name.removesuffix('.csv') + '_grouped' + '.csv'
-	print(f'Writing grouped data by URL to {grouped_filename}...')
-	result_df.groupby("expanded_url").sum().reset_index().to_csv(f'{grouped_filename}', mode='w+',index=False, errors='backslashreplace', encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
+	# grouped_filename = file_name.removesuffix('.csv') + '_grouped' + '.csv'
+	# print(f'Writing grouped data by URL to {grouped_filename}...')
+	# result_df.groupby("expanded_url").sum().reset_index().to_csv(f'{grouped_filename}', mode='w+',index=False, errors='backslashreplace', encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
 
 	errors_before = len(df[df.error_expanding == True])
 	errors_after = len(result_df[result_df.error_expanding == True])
@@ -105,7 +105,7 @@ if __name__ == '__main__':
 		'--filename',
 		type=str,
 		required=True,
-		help='Full or relative path to the csv file. E.g. results/my_data.csv',
+		help='Full or relative path to the dictionary csv file. E.g. results/my_data.csv',
 	)
 	p.add_argument(
 		'-c',
@@ -119,13 +119,6 @@ if __name__ == '__main__':
 		type=int,
 		default=1,
 		help='Max depth to follow redirects when analyzing URLs. Default is the minimum: 1 (get link after t.co). WARNING: exponentially slower with each added layer of depth'
-	)
-	p.add_argument(
-		'--csv-sep',
-		type=str,
-		default=',',
-		choices=[',', ';', '\\t', '|'],
-		help='Separator for your csv file. Default: ","',
 	)
 
 	args = vars(p.parse_args())

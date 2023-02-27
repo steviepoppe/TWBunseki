@@ -495,9 +495,9 @@ createApp({
                 checked: false,
                 config: [
                     {
-                        name: 'Input Filename',
+                        name: 'Dictionary Filename',
                         required: true,
-                        desc: 'Full or relative path to the csv file. E.g. <code>results/my_data.csv</code>',
+                        desc: 'Full or relative path to the dictionary csv file. E.g. <code>results/my_data.csv</code>',
                         type: 'command',
                         arg: '-f',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
@@ -521,42 +521,24 @@ createApp({
                         input: {type: 'number'},
                         value: null,
                     },
-                    {
-                        name: 'CSV Separator',
-                        required: false,
-                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
-                        type: 'command',
-                        arg: '--csv-sep',
-                        input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
-                        value: null,
-                    },
                 ]
             },
             {
-                name: 'process_expanded_url_data',
-                desc: 'Clean up expanded URL data. Adds subdomain/root domain and cleans up links. STEP THREE in media pipeline.',
-                filename: '3_process_expanded_url_data.py',
-                src: 'scripts/3_process_expanded_url_data.py',
+                name: 'process_url_dictionary',
+                desc: 'Clean up URL dictionary data. Adds subdomain/root domain and cleans up links. STEP THREE in media pipeline.',
+                filename: '3_process_url_dictionary.py',
+                src: 'scripts/3_process_url_dictionary.py',
                 checked: false,
                 config: [
                     {
-                        name: 'Expanded URL Data Filename',
+                        name: 'Dictionary Filename',
                         required: true,
                         desc: 'Full or relative path to the corpus csv file (output of <code>reanalyze_media</code> or <code>get_metrics</code>). E.g. <code>results/my_data.csv</code>',
                         type: 'command',
                         arg: '-euf',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
                         value: null,
-                    },
-                    {
-                        name: 'CSV Separator',
-                        required: false,
-                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
-                        type: 'command',
-                        arg: '--csv-sep',
-                        input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
-                        value: null,
-                    },
+                    }
                 ]
             },
             {
@@ -567,20 +549,20 @@ createApp({
                 checked: false,
                 config: [
                     {
-                        name: 'Data-per-tweet Filename',
+                        name: 'Tweet Links Filename',
                         required: true,
-                        desc: 'Full or relative path to the data per tweet csv file (output of <code>extract_media</code>). E.g. <code>results/my_data.csv</code>',
+                        desc: 'Full or relative path to the tweet links csv file (output of <code>extract_media</code>). E.g. <code>results/my_data.csv</code>',
                         type: 'command',
-                        arg: '-dptf',
+                        arg: '-lf',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
                         value: null,
                     },
                     {
-                        name: 'Expanded URL Data Filename',
+                        name: 'Dictionary Filename',
                         required: true,
-                        desc: 'Full or relative path to the processed expanded URL csv file (output of <code>process_expanded_url_data</code>). E.g. <code>results/my_data.csv</code>',
+                        desc: 'Full or relative path to the processed URL dictionary csv file (output of <code>process_url_dictionary</code>). E.g. <code>results/my_data.csv</code>',
                         type: 'command',
-                        arg: '-peuf',
+                        arg: '-df',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
                         value: null,
                     },
@@ -593,17 +575,62 @@ createApp({
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
                         value: null,
                     },
+                ]
+            },
+            {
+                name: 'get_all_tweet_external_link_stats',
+                desc: 'Get stats about which tweets in the entire corpus link to external media (non-Twitter). STEP FIVE in the media pipeline.',
+                filename: '5_get_all_tweet_external_link_stats.py',
+                src: 'scripts/5_get_all_tweet_external_link_stats.py',
+                checked: false,
+                config: [
                     {
-                        name: 'CSV Separator',
+                        name: 'Corpus Filename',
+                        required: true,
+                        desc: 'Full or relative path to the corpus csv file (output of <code>search</code>). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-cf',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Corpus CSV Separator',
                         required: false,
-                        desc: 'Separator for your csv file. Default: <code>comma ","</code>',
+                        desc: 'Separator for your corpus csv file. Default: <code>comma ","</code>',
                         type: 'command',
                         arg: '--csv-sep',
                         input: {type: 'select', options: [{value: ',', name: 'comma ","'}, {value: ';', name: 'semi-colon ";"'}, {value: '|', name: 'pipe "|"'}, {value: '\t', name: 'tab'}] },
                         value: null,
                     },
+                    {
+                        name: 'Dictionary Filename',
+                        required: true,
+                        desc: 'Full or relative path to the processed URL dictionary csv file from <code>reanalyze_media</code> (UNEDITED). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-df',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Tweet Links Filename',
+                        required: true,
+                        desc: 'Full or relative path to the tweet links csv file (output of <code>extract_media</code>). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-lf',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Output Filename',
+                        required: true,
+                        desc: 'Full or relative path store resulting csv files (will be edited with suffixes). E.g. <code>results/my_data.csv</code>',
+                        type: 'command',
+                        arg: '-of',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    }
                 ]
-            }
+            },
         ],
         other_files: [
             {

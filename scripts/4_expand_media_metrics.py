@@ -37,16 +37,15 @@ def save_df(df, file_name, suffix, index=False):
 
 
 def expand_media_metrics(args):
-	data_per_tweet_file_name = args['data_per_tweet_filename']
-	processed_expanded_file_name = args['processed_expanded_url_filename']
+	data_per_tweet_file_name = args['tweet_links_filename']
+	processed_expanded_file_name = args['dictionary_filename']
 	output_filename = args['output_filename']
-	sep = args['csv_sep']
 
-	print(f'Reading data per tweet csv from {data_per_tweet_file_name}...')
+	print(f'Reading tweet links csv from {data_per_tweet_file_name}...')
 	tweet_data_df = pd.read_csv(data_per_tweet_file_name, encoding='utf-8', sep=sep)
 	tweet_data_df.created_at = pd.to_datetime(tweet_data_df.created_at)
 
-	print(f'Reading processed expanded URL data from {processed_expanded_file_name}...')
+	print(f'Reading URL dictionary data from {processed_expanded_file_name}...')
 	expanded_df = pd.read_csv(processed_expanded_file_name, encoding='utf-8', sep=sep)
 
 	merged_df = tweet_data_df.merge(expanded_df, how='left', on='url')
@@ -56,9 +55,49 @@ def expand_media_metrics(args):
 	archived_df = add_archive_links(merged_df)
 	save_df(archived_df, output_filename, '_with_archived_links')
 
-	# groups
-	merged_df = merged_df.assign(tweet_count_for_dimensions_in_set=1)
-	# logic here!
+	merged_df['month'] = merged_df['created_at'].dt.month
+	merged_df['year'] = merged_df['created_at'].dt.year
+
+	merged_df = merged_df.assign(total_tweets_in_set=1)
+
+	## ALL TIME
+
+	# 1. group by URL, all time stats
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'clean_expanded_url']]
+	group_df = group_df.groupby('clean_expanded_url').agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	save_df(group_df, output_filename, '_group_by_url_all_time')
+
+	# 2. group by root domain, all time stats
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'root_domain']]
+	group_df = group_df.groupby('root_domain').agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	save_df(group_df, output_filename, '_group_by_root_domain_all_time')
+
+	# 3. group by sub domain, all time stats
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'sub_domain', 'root_domain']]
+	group_df = group_df[group_df['sub_domain'].notna()]
+	group_df['sub_domain'] = group_df.apply(lambda x: x['sub_domain'] + '.' +  x['root_domain'], axis=1)
+	group_df = group_df.drop(columns=['root_domain'])
+	group_df = group_df.groupby('sub_domain').agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	save_df(group_df, output_filename, '_group_by_subdomain_all_time')
+
+	# ------------
+
+	## BY MONTH
+
+
+	# 4. group by root domain, over time stats
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'root_domain', 'month', 'year']]
+	group_df = group_df.groupby(['root_domain', 'month', 'year']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	save_df(group_df, output_filename, '_group_by_root_domain_by_month_year')
+
+	# 5. group by sub domain, all time stats
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'sub_domain', 'root_domain', 'month', 'year']]
+	group_df = group_df[group_df['sub_domain'].notna()]
+	group_df['sub_domain'] = group_df.apply(lambda x: x['sub_domain'] + '.' +  x['root_domain'], axis=1)
+	group_df = group_df.drop(columns=['root_domain'])
+	group_df = group_df.groupby(['sub_domain', 'month', 'year']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	save_df(group_df, output_filename, '_group_by_subdomain_by_month_year')
+
 	print('Done!')
 
 
@@ -67,18 +106,18 @@ if __name__ == '__main__':
 	pd.options.mode.chained_assignment = None
 	p = argparse.ArgumentParser(description='Get and aggregate data for Media URL metrics (more granular than get_metrics.py)')
 	p.add_argument(
-		'-dptf',
-		'--data-per-tweet-filename',
+		'-lf',
+		'--tweet-links-filename',
 		type=str,
 		required=True,
-		help='Full or relative path to the data per tweet csv file from extract_media.py. E.g. results/my_data.csv',
+		help='Full or relative path to the tweet links csv file from extract_media.py. E.g. results/my_data.csv',
 	)
 	p.add_argument(
-		'-peuf',
-		'--processed-expanded-url-filename',
+		'-df',
+		'--dictionary-filename',
 		type=str,
 		required=True,
-		help='Full or relative path to the processed expanded URL csv file from process_expanded_url_data.py. E.g. results/my_data.csv',
+		help='Full or relative path to the processed URL dictionary csv file from process_url_dictionary.py. E.g. results/my_data.csv',
 	)
 	p.add_argument(
 		'-of',
@@ -86,13 +125,6 @@ if __name__ == '__main__':
 		type=str,
 		required=True,
 		help='Full or relative path store resulting csv files (will be edited with suffixes). E.g. results/my_data.csv',
-	)
-	p.add_argument(
-		'--csv-sep',
-		type=str,
-		default=',',
-		choices=[',', ';', '\\t', '|'],
-		help='Separator for your csv files (do not enter/change if output is from other scripts). Default: ","',
 	)
 	args = vars(p.parse_args())
 	expand_media_metrics(args)
