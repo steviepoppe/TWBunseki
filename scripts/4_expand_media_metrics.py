@@ -17,9 +17,9 @@ def add_archive_links(merged_df):
 	# drop duplicates
 	unique_df = sorted_df.drop_duplicates(subset='url', keep='last', ignore_index=True)
 
-	print('> excluding twitter.com links')
+	print('> excluding twitter.com, archive.org, megalodon.jp links')
 	# exclude twitter.com links
-	unique_df = unique_df[~unique_df['root_domain'].isin(['twitter.com'])]
+	unique_df = unique_df[~unique_df['root_domain'].isin(['twitter.com', 'archive.org', 'megalodon.jp'])]
 
 	print('> generating column')
 	# generate column

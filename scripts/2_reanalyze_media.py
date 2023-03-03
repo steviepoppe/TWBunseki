@@ -18,7 +18,7 @@ async def reanalyze(args):
 	max_redirect_depth = args['max_redirect_depth']
 	chunksize = args['chunk_size']
 
-	df = pd.read_csv(file_name, encoding='utf-8', sep=sep)
+	df = pd.read_csv(file_name, encoding='utf-8')
 
 	if 'url' not in df:
 		print('URL column is required to re-analyze. Aborting.')
@@ -77,10 +77,16 @@ async def expand_url(session, row, max_redirect_depth):
 	domain = ''
 	redirect = 0
 	next_url = url
+	headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 	try:
 		while redirect < max_redirect_depth:
-			async with session.head(next_url, allow_redirects=False) as res:
-				next_url = res.headers.get('location', res.headers.get('X-Redirect-To',''))
+			if next_url.startswith('https://t.co/'):
+				async with session.get(next_url, allow_redirects=False, headers=headers) as response:
+					body = await response.text()
+					next_url = re.search("(?P<url>https?://[^\s]+)\"", body).group('url')
+			else:
+				async with session.head(next_url, allow_redirects=False, headers=headers) as res:
+					next_url = res.headers.get('location', res.headers.get('X-Redirect-To',''))
 			if next_url == '':
 				break
 			if next_url.startswith('/'):
