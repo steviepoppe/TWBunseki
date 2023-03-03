@@ -535,7 +535,7 @@ createApp({
                         required: true,
                         desc: 'Full or relative path to the corpus csv file (output of <code>reanalyze_media</code> or <code>get_metrics</code>). E.g. <code>results/my_data.csv</code>',
                         type: 'command',
-                        arg: '-euf',
+                        arg: '-df',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
                         value: null,
                     }

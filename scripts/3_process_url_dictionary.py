@@ -47,6 +47,7 @@ UNWANTED_QUERIES = [
 	'dicbo',
 	'vlang',
 	'share_id',
+	'feature',
 ]
 
 REDIRECTS = [
@@ -54,7 +55,10 @@ REDIRECTS = [
 	('https://pt.afl.rakuten.co.jp/c/', 'pc'),
 	('https://hb.afl.rakuten.co.jp', 'pc'),
 	('https://al.dmm.com/', 'lurl'),
+	('https://mixi.jp/redirect_with_owner_id.pl', 'b'),
 ]
+
+QUERYLESS_URLS = ['twitcasting.tv','nikkei.com','sankei.com', 'tiktok.com', 'tumblr.com', 'change.org', 'dailyshincho.jp']
 
 def get_domain(url):
 	extracted = tldextract.extract(url)
@@ -91,7 +95,7 @@ def clean_queries(row):
 		v_id = query['v'][0]
 		return f'https://youtube.com/watch?v={v_id}'
 	if row['root_domain'] == 'youtu.be':
-		v_id = url.path[1:]
+		v_id = parsed_url.path[1:]
 		return f'https://youtube.com/watch?v={v_id}'
 
 	# 2. direct redirect from URL
@@ -111,10 +115,10 @@ def clean_queries(row):
 		queryless_url = url
 	else:
 		queryless_url = urljoin(url, parsed_url.path)
-	if row['root_domain'].startswith('amazon.') or row['root_domain'] ín ['twitcasting.tv','nikkei.com','sankei.com', 'tiktok.com']:
-		return queryless_url
 	if not queryless_url.endswith('/'):
 		queryless_url += '/'
+	if row['root_domain'].startswith('amazon.') or row['root_domain'] in QUERYLESS_URLS:
+		return queryless_url
 	if query:
 		for unwanted_query in UNWANTED_QUERIES:
 			if unwanted_query in query:
@@ -146,11 +150,11 @@ def process_expanded_df(args):
 	expanded_df['suffix'] = expanded_df['expanded_url'].apply(get_suffix)
 
 	print(f'Cleaning links...')
-	expanded_df['clean_expanded_url'] = expanded_df.apply(clean_queries, axis=1)
-	expanded_df['clean_expanded_url'] = expanded_df['clean_expanded_url'].apply(requests.utils.unquote)
-	expanded_df = expanded_df[['url', 'expanded_url',  'user_screen_name', 'clean_expanded_url', 'domain', 'root_domain', 'sub_domain', 'suffix', 'total_tweets_in_set']]
+	expanded_df['expanded_url'] = expanded_df.apply(clean_queries, axis=1)
+	expanded_df['expanded_url'] = expanded_df['expanded_url'].apply(requests.utils.unquote)
+	expanded_df = expanded_df[['url', 'expanded_url',  'user_screen_name', 'domain', 'root_domain', 'sub_domain', 'suffix', 'total_tweets_in_set']]
 	
-	save_file_name = file_name.removesuffix('.csv') + '_processed_for_expand_media_metrics' + '.csv'
+	save_file_name = file_name.removesuffix('.csv') + '_processed' + '.csv'
 	print(f'Saving URL dictionary data to {save_file_name}...')
 	expanded_df.to_csv(save_file_name, mode='w+',index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
 
