@@ -24,7 +24,7 @@ def add_archive_links(merged_df):
 	print('> generating column')
 	# generate column
 	unique_df['archive_url'] = unique_df.apply(
-		lambda x: 'https://web.archive.org/web/' + str(x['created_at'].year) + '%02d' % x['created_at'].month + '%02d' % x['created_at'].day + '/' + str(x['clean_expanded_url']),
+		lambda x: 'https://web.archive.org/web/' + str(x['created_at'].year) + '%02d' % x['created_at'].month + '%02d' % x['created_at'].day + '/' + str(x['expanded_url']),
 		axis=1,
 	)
 	return unique_df
@@ -63,8 +63,8 @@ def expand_media_metrics(args):
 	## ALL TIME
 
 	# 1. group by URL, all time stats
-	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'clean_expanded_url']]
-	group_df = group_df.groupby('clean_expanded_url').agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'expanded_url']]
+	group_df = group_df.groupby('expanded_url').agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
 	save_df(group_df, output_filename, '_group_by_url_all_time')
 
 	# 2. group by root domain, all time stats
