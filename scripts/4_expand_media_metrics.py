@@ -42,26 +42,27 @@ def expand_media_metrics(args):
 	output_filename = args['output_filename']
 
 	print(f'Reading tweet links csv from {data_per_tweet_file_name}...')
-	tweet_data_df = pd.read_csv(data_per_tweet_file_name, encoding='utf-8', sep=sep)
+	tweet_data_df = pd.read_csv(data_per_tweet_file_name, encoding='utf-8')
 	tweet_data_df.created_at = pd.to_datetime(tweet_data_df.created_at)
 
 	print(f'Reading URL dictionary data from {processed_expanded_file_name}...')
-	expanded_df = pd.read_csv(processed_expanded_file_name, encoding='utf-8', sep=sep)
+	expanded_df = pd.read_csv(processed_expanded_file_name, encoding='utf-8')
 
-	merged_df = tweet_data_df.merge(expanded_df, how='left', on='url')
+	merged_df = tweet_data_df.merge(expanded_df, how='left', on=['url', 'user_screen_name'])
 	if 'total_tweets_in_set' in merged_df:
 		merged_df = merged_df.drop(columns=['total_tweets_in_set'])
 
 	archived_df = add_archive_links(merged_df)
 	save_df(archived_df, output_filename, '_with_archived_links')
 
-	merged_df['month'] = merged_df['created_at'].dt.month
+	merged_df['month'] = merged_df['created_at'].dt.month_name()
 	merged_df['year'] = merged_df['created_at'].dt.year
 
 	merged_df = merged_df.assign(total_tweets_in_set=1)
+	print('Excluding all twitter.com data...')
+	merged_df = merged_df[merged_df['root_domain'] != 'twitter.com']
 
-	## ALL TIME
-
+	## ALL TIM
 	# 1. group by URL, all time stats
 	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'expanded_url']]
 	group_df = group_df.groupby('expanded_url').agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
@@ -97,6 +98,11 @@ def expand_media_metrics(args):
 	group_df = group_df.drop(columns=['root_domain'])
 	group_df = group_df.groupby(['sub_domain', 'month', 'year']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
 	save_df(group_df, output_filename, '_group_by_subdomain_by_month_year')
+
+	# 6. group by URL, all time stats
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'expanded_url', 'month', 'year']]
+	group_df = group_df.groupby(['expanded_url', 'month', 'year']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	save_df(group_df, output_filename, '_group_by_url_by_month_year')
 
 	print('Done!')
 

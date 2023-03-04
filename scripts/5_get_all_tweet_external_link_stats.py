@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 import csv
 
@@ -6,14 +7,14 @@ import tldextract
 
 def get_domain(url):
 	if type(url) is str:
-		return tldextract(url).domain
+		return tldextract.extract(url).domain
 	return ''
 
 
 def get_all_tweet_stats(args):
 	corpus_filename = args['corpus_filename']
 	dictionary_filename = args['dictionary_filename']
-	tweet_links_filename = args['tweet_links_filename ']
+	tweet_links_filename = args['tweet_links_filename']
 	output_filename = args['output_filename']
 	csv_sep = args['csv_sep']
 
@@ -51,6 +52,18 @@ def get_all_tweet_stats(args):
 	save_file_name = output_filename.removesuffix('.csv') + '_all_tweets_with_external_link_flag' + '.csv'
 	print(f'Saving dataframe to {save_file_name}...')
 	final_df.to_csv(save_file_name, mode='w+', index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
+
+	print(f'Constructing grouped dataframe...')
+	final_df.created_at = pd.to_datetime(final_df.created_at)
+	final_df['month'] = final_df.created_at.dt.month_name()
+	final_df['year'] = final_df.created_at.dt.year
+	grouped = final_df.groupby(['has_external_link', 'month', 'year']).agg({'tweet_id': 'nunique', 'user_screen_name': 'nunique', 'tweet_retweet_count': 'sum'}).reset_index()
+	grouped = grouped.rename(columns={'tweet_id': 'total_tweets_in_set'})
+
+	save_file_name = output_filename.removesuffix('.csv') + '_grouped' + '.csv'
+	print(f'Saving dataframe to {save_file_name}...')
+	grouped.to_csv(save_file_name, mode='w+', index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
+
 
 	print(f'Extracting stats...')
 	data = pd.DataFrame([
