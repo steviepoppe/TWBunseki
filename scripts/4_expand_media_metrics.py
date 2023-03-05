@@ -55,8 +55,7 @@ def expand_media_metrics(args):
 	archived_df = add_archive_links(merged_df)
 	save_df(archived_df, output_filename, '_with_archived_links')
 
-	merged_df['month'] = merged_df['created_at'].dt.month_name()
-	merged_df['year'] = merged_df['created_at'].dt.year
+	merged_df['date'] = merged_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.year), axis=1)
 
 	merged_df = merged_df.assign(total_tweets_in_set=1)
 	print('Excluding all twitter.com data...')
@@ -87,21 +86,21 @@ def expand_media_metrics(args):
 
 
 	# 4. group by root domain, over time stats
-	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'root_domain', 'month', 'year']]
-	group_df = group_df.groupby(['root_domain', 'month', 'year']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'root_domain', 'date']]
+	group_df = group_df.groupby(['root_domain', 'date']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
 	save_df(group_df, output_filename, '_group_by_root_domain_by_month_year')
 
 	# 5. group by sub domain, all time stats
-	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'sub_domain', 'root_domain', 'month', 'year']]
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'sub_domain', 'root_domain', 'date']]
 	group_df = group_df[group_df['sub_domain'].notna()]
 	group_df['sub_domain'] = group_df.apply(lambda x: x['sub_domain'] + '.' +  x['root_domain'], axis=1)
 	group_df = group_df.drop(columns=['root_domain'])
-	group_df = group_df.groupby(['sub_domain', 'month', 'year']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	group_df = group_df.groupby(['sub_domain', 'date']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
 	save_df(group_df, output_filename, '_group_by_subdomain_by_month_year')
 
 	# 6. group by URL, all time stats
-	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'expanded_url', 'month', 'year']]
-	group_df = group_df.groupby(['expanded_url', 'month', 'year']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
+	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'expanded_url', 'date']]
+	group_df = group_df.groupby(['expanded_url', 'date']).agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
 	save_df(group_df, output_filename, '_group_by_url_by_month_year')
 
 	print('Done!')

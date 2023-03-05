@@ -55,10 +55,12 @@ def get_all_tweet_stats(args):
 
 	print(f'Constructing grouped dataframe...')
 	final_df.created_at = pd.to_datetime(final_df.created_at)
-	final_df['month'] = final_df.created_at.dt.month_name()
-	final_df['year'] = final_df.created_at.dt.year
-	grouped = final_df.groupby(['has_external_link', 'month', 'year']).agg({'tweet_id': 'nunique', 'user_screen_name': 'nunique', 'tweet_retweet_count': 'sum'}).reset_index()
+	final_df['date'] = final_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.year), axis=1)
+	grouped = final_df.groupby(['date', 'has_external_link']).agg({'tweet_id': 'nunique', 'user_screen_name': 'nunique', 'tweet_retweet_count': 'sum'}).reset_index()
 	grouped = grouped.rename(columns={'tweet_id': 'total_tweets_in_set'})
+	grouped['has_external_link_TRUE'] = grouped['has_external_link'].apply(lambda x: 1 if x else 0)
+	grouped['has_external_link_FALSE'] = grouped['has_external_link'].apply(lambda x: 0 if x else 1)
+	grouped = grouped.drop(columns=['has_external_link'])
 
 	save_file_name = output_filename.removesuffix('.csv') + '_grouped' + '.csv'
 	print(f'Saving dataframe to {save_file_name}...')
