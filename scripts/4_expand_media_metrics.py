@@ -55,7 +55,12 @@ def expand_media_metrics(args):
 	archived_df = add_archive_links(merged_df)
 	save_df(archived_df, output_filename, '_with_archived_links')
 
-	merged_df['date'] = merged_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.year), axis=1)
+	if args['split_by_hour']:
+		merged_df['date'] = merged_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.day) + '/' + str(x.created_at.year) + ' ' + str(x.created_at.hour) + ':00:00', axis=1)
+	elif args['split_by_day']:
+		merged_df['date'] = merged_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.day) + '/' + str(x.created_at.year), axis=1)
+	else:
+		merged_df['date'] = merged_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.year), axis=1)
 
 	merged_df = merged_df.assign(total_tweets_in_set=1)
 	print('Excluding all twitter.com data...')
@@ -130,6 +135,16 @@ if __name__ == '__main__':
 		type=str,
 		required=True,
 		help='Full or relative path store resulting csv files (will be edited with suffixes). E.g. results/my_data.csv',
+	)
+	p.add_argument(
+		'--split-by-day',
+		action='store_true',
+		help='Use this to group dates by day (month/day/year).',
+	)
+	p.add_argument(
+		'--split-by-hour',
+		action='store_true',
+		help='Use this to group dates by hour (month/day/year HH:00:00).',
 	)
 	args = vars(p.parse_args())
 	expand_media_metrics(args)

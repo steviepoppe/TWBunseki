@@ -55,7 +55,12 @@ def get_all_tweet_stats(args):
 
 	print(f'Constructing grouped dataframe...')
 	final_df.created_at = pd.to_datetime(final_df.created_at)
-	final_df['date'] = final_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.year), axis=1)
+	if args['split_by_hour']:
+		final_df['date'] = final_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.day) + '/' + str(x.created_at.year) + ' ' + str(x.created_at.hour) + ':00:00', axis=1)
+	elif args['split_by_day']:
+		final_df['date'] = final_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.day) + '/' + str(x.created_at.year), axis=1)
+	else:
+		final_df['date'] = final_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.year), axis=1)
 
 	grouped = final_df.groupby(['date', 'has_external_link']).agg({'tweet_id': 'nunique', 'user_screen_name': 'nunique', 'tweet_retweet_count': 'sum'}).reset_index()
 	grouped = grouped.rename(columns={'tweet_id': 'tweets_in_set'})
@@ -137,6 +142,16 @@ if __name__ == '__main__':
 		default=',',
 		choices=[',', ';', '\\t', '|'],
 		help='Separator for your corpus csv. Default: ","',
+	)
+	p.add_argument(
+		'--split-by-day',
+		action='store_true',
+		help='Use this to group dates by day (month/day/year).',
+	)
+	p.add_argument(
+		'--split-by-hour',
+		action='store_true',
+		help='Use this to group dates by hour (month/day/year HH:00:00).',
 	)
 	args = vars(p.parse_args())
 	get_all_tweet_stats(args)

@@ -575,6 +575,24 @@ createApp({
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
                         value: null,
                     },
+                    {
+                        name: 'Split by day',
+                        required: false,
+                        desc: 'Use this to group dates by day (month/day/year)',
+                        type: 'command',
+                        arg: '--split-by-day',
+                        input: {type: 'checkbox'},
+                        value: null,
+                    },
+                    {
+                        name: 'Split by hour',
+                        required: false,
+                        desc: 'Use this to group dates by hour (month/day/year HH:00:00)',
+                        type: 'command',
+                        arg: '--split-by-hour',
+                        input: {type: 'checkbox'},
+                        value: null,
+                    }
                 ]
             },
             {
@@ -627,6 +645,24 @@ createApp({
                         type: 'command',
                         arg: '-of',
                         input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Split by day',
+                        required: false,
+                        desc: 'Use this to group dates by day (month/day/year)',
+                        type: 'command',
+                        arg: '--split-by-day',
+                        input: {type: 'checkbox'},
+                        value: null,
+                    },
+                    {
+                        name: 'Split by hour',
+                        required: false,
+                        desc: 'Use this to group dates by hour (month/day/year HH:00:00)',
+                        type: 'command',
+                        arg: '--split-by-hour',
+                        input: {type: 'checkbox'},
                         value: null,
                     }
                 ]
