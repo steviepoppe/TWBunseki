@@ -48,6 +48,7 @@ UNWANTED_QUERIES = [
 	'vlang',
 	'share_id',
 	'feature',
+	'highlight',
 ]
 
 REDIRECTS = [

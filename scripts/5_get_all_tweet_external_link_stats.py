@@ -56,11 +56,21 @@ def get_all_tweet_stats(args):
 	print(f'Constructing grouped dataframe...')
 	final_df.created_at = pd.to_datetime(final_df.created_at)
 	final_df['date'] = final_df.apply(lambda x: str(x.created_at.month) + '/' + str(x.created_at.year), axis=1)
+
 	grouped = final_df.groupby(['date', 'has_external_link']).agg({'tweet_id': 'nunique', 'user_screen_name': 'nunique', 'tweet_retweet_count': 'sum'}).reset_index()
-	grouped = grouped.rename(columns={'tweet_id': 'total_tweets_in_set'})
-	grouped['has_external_link_TRUE'] = grouped['has_external_link'].apply(lambda x: 1 if x else 0)
-	grouped['has_external_link_FALSE'] = grouped['has_external_link'].apply(lambda x: 0 if x else 1)
-	grouped = grouped.drop(columns=['has_external_link'])
+	grouped = grouped.rename(columns={'tweet_id': 'tweets_in_set'})
+	grouped_split = grouped[grouped.has_external_link].drop(
+		columns=['has_external_link'],
+	).merge(
+		grouped[~grouped.has_external_link].drop(columns=['has_external_link']),
+		on='date',
+		suffixes=('_with_external', '_without_external'),
+		how='outer',
+	).fillna(0)
+	grouped = final_df.drop(columns=['has_external_link']).groupby(['date']).agg({'tweet_id': 'nunique', 'user_screen_name': 'nunique', 'tweet_retweet_count': 'sum'}).reset_index()
+	grouped = grouped.rename(columns={'tweet_id': 'tweets_in_set'})
+	grouped = grouped.add_suffix('_total').rename(columns={'date_total': 'date'})
+	grouped = grouped_split.merge(grouped, on='date', how='outer').fillna(0)
 
 	save_file_name = output_filename.removesuffix('.csv') + '_grouped' + '.csv'
 	print(f'Saving dataframe to {save_file_name}...')

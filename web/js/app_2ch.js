@@ -72,6 +72,33 @@ createApp({
                     },
                 ]
             },
+            {
+                name: 'extract',
+                desc: 'Extract and merge csv data from html files.',
+                filename: 'extract_2ch.py',
+                src: 'scripts/extract_2ch.py',
+                checked: false,
+                config: [
+                    {
+                        name: 'Input Filepath Pattern',
+                        required: true,
+                        desc: 'Full or relative path pattern for the csv files. Can use wildcards. Example: <code>C://Downloads/2channel_mythread_*.html</code>',
+                        type: 'command',
+                        arg: '-fp',
+                        input: {type: 'text', placeholder: 'Full path including folders from where the script will be running'},
+                        value: null,
+                    },
+                    {
+                        name: 'Save Folder',
+                        required: true,
+                        desc: 'Folder prefix to store results in. Can be something like <code>results/mythread/</code>',
+                        type: 'command',
+                        arg: '-s',
+                        input: {type: 'text', placeholder: 'Only folders'},
+                        value: null,
+                    },
+                ]
+            },
             // {
             //     name: 'categorize',
             //     desc: 'Categorize data rows based on given keyword map. In other words, given categories and possible keywords that belong in it, it checks for keywords and decides which categories this row/tweet falls into.',
