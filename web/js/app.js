@@ -140,7 +140,6 @@ createApp({
             {
                 name: 'get_user_tweets',
                 desc: 'Fetch tweets for specific user_ids from Twitter API. '
-                + 'Requires <a href="https://developer.twitter.com/en/products/twitter-api/academic-research">Twitter for Academic Research</a> access. '
                 + 'Downloads data locally under <code>results/{filename}.csv</code>.',
                 filename: 'twitter_timeline.py',
                 src: 'scripts/twitter_timeline.py',
