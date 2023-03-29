@@ -149,7 +149,7 @@ createApp({
                     {
                         name: 'Twitter API Bearer Token',
                         required: true,
-                        desc: 'Requires <a href="https://developer.twitter.com/en/products/twitter-api/academic-research">Twitter for Academic Research</a> access',
+                        desc: '',
                         type: 'settings',
                         arg: 'BEARER_TOKEN',
                         input: {type: 'text', placeholder: 'Leave empty to fill in yourself in settings.py'},
