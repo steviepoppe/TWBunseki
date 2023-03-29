@@ -102,6 +102,54 @@ def get_all_tweet_stats(args):
 	print(f'Saving stats dataframe to {save_file_name}...')
 	data.to_csv(save_file_name, mode='w+', index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
 
+
+	print('Getting user stats...')
+	user_df = corpus[['tweet_id', 'user_screen_name', 'tweet_retweet_count', 'has_external_link', 'user_description', 'user_following_count', 'user_followers_count', 'user_id', 'created_at']]
+	user_df.created_at = pd.to_datetime(user_df.created_at)
+	user_df = user_df.sort_values('created_at')
+	user_df = user_df.drop(columns=['created_at'])
+
+	user_df = user_df.groupby(['user_id', 'has_external_link']).agg({
+		'tweet_id': 'nunique',
+		'tweet_retweet_count': 'sum',
+		'user_screen_name': 'last',
+		'user_description': 'last',
+		'user_following_count': 'last',
+		'user_followers_count': 'last',
+	}).reset_index()
+	user_df = user_df.rename(columns={'tweet_id': 'tweets_in_set'})
+	user_df_split = user_df[user_df.has_external_link].drop(
+		columns=['has_external_link'],
+	).merge(
+		user_df[~user_df.has_external_link].drop(columns=['has_external_link']),
+		on=['user_id'],
+		how='outer',
+		suffixes=('_with_external', '_without_external'),
+	).fillna(0)
+
+	def get_values(column):
+		def curried(row):
+			return row[f'{column}_with_external'] if row[f'{column}_without_external'] == 0 else row[f'{column}_without_external']
+		return curried
+
+	for column in ['user_screen_name', 'user_description', 'user_following_count', 'user_followers_count']:
+		user_df_split[column] = user_df_split.apply(get_values(column), axis=1)
+		user_df_split = user_df_split.drop(columns=[f'{column}_with_external', f'{column}_without_external'])
+
+	user_df = user_df.drop(columns=['has_external_link']).groupby(['user_id']).agg({
+		'tweets_in_set': 'sum',
+		'tweet_retweet_count': 'sum',
+		'user_screen_name': 'last',
+		'user_description': 'last',
+		'user_following_count': 'last',
+		'user_followers_count': 'last',
+	}).reset_index()
+	user_df = user_df.rename(columns={'tweets_in_set': 'tweets_in_set_total', 'tweet_retweet_count': 'tweet_retweet_count_total'})
+	user_df = user_df_split.merge(user_df[['user_id', 'tweet_retweet_count_total', 'tweets_in_set_total']], on=['user_id'], how='inner')
+	save_file_name = output_filename.removesuffix('.csv') + '_grouped_user' + '.csv'
+	print(f'Saving dataframe to {save_file_name}...')
+	user_df.to_csv(save_file_name, mode='w+', index=False, encoding='utf-8', quoting=csv.QUOTE_NONNUMERIC)
+
 	print('Done!')
 
 

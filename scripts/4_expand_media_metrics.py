@@ -66,7 +66,7 @@ def expand_media_metrics(args):
 	print('Excluding all twitter.com data...')
 	merged_df = merged_df[merged_df['root_domain'] != 'twitter.com']
 
-	## ALL TIM
+	## ALL TIME
 	# 1. group by URL, all time stats
 	group_df = merged_df[['user_screen_name', 'tweet_retweet_count', 'total_tweets_in_set', 'expanded_url']]
 	group_df = group_df.groupby('expanded_url').agg({'user_screen_name': 'nunique', 'tweet_retweet_count': sum, 'total_tweets_in_set': sum}).reset_index()
